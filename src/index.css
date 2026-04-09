@@ -1,0 +1,49 @@
+:root {
+  --bg: #f4f1ec;
+  --card: #fffdf9;
+  --text: #2f2a26;
+  --muted: #756d66;
+  --border: #e6ded3;
+  --accent: #5b6ea6;
+  --accent-soft: rgba(91, 110, 166, 0.12);
+  --danger: #dc2626;
+  --shadow: 0 16px 36px rgba(66, 57, 48, 0.1);
+  --radius: 18px;
+
+  font-family: 'Avenir Next', 'Inter', 'Segoe UI', system-ui, -apple-system,
+    sans-serif;
+  font-size: 15.5px;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #f8f6f2 0%, #f0ece6 100%);
+  color: var(--text);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
