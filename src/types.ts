@@ -3,6 +3,7 @@ export type CategoryEntry = {
   committedDays: string
   actualDays: string
   reason: string
+  cmoHelp: string
 }
 
 export type CaseReport = {
@@ -13,8 +14,7 @@ export type CaseReport = {
   lastName: string
   nameSuffix: string
   phone: string
-  personalEmail: string
-  workEmail: string
+  email: string
   department: string
   categories: CategoryEntry[]
 }

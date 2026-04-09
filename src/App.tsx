@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ListOrdered, Sparkles } from 'lucide-react'
+import { ListOrdered, Plus, Sparkles, X } from 'lucide-react'
 import './App.css'
 import { caseCategories } from './data/categories'
 import { officeTopCategories } from './data/officeTopCategories'
@@ -12,12 +12,17 @@ import type { CaseReport, CategoryEntry } from './types'
 
 type CategoryMode = 'custom' | 'system'
 
+const MIN_CATEGORIES = 1
+const MAX_CATEGORIES = 10
+const DRAFT_STORAGE_KEY = 'mynaga_case_form_draft_v1'
+
 const createCategoryEntries = (titles: string[]): CategoryEntry[] =>
   titles.map((title) => ({
     title,
     committedDays: '',
     actualDays: '',
     reason: '',
+    cmoHelp: '',
   }))
 
 const defaultCategoryTitles = [
@@ -53,8 +58,7 @@ const initialFormData = (): CaseReport => ({
   lastName: '',
   nameSuffix: '',
   phone: '',
-  personalEmail: '',
-  workEmail: '',
+  email: '',
   department: '',
   categories: createCategoryEntries(defaultCategoryTitles),
 })
@@ -136,19 +140,35 @@ const normalizeReport = (row: Record<string, unknown>): CaseReport => {
     lastName,
     nameSuffix,
     phone: (row.phone as string | undefined) ?? '',
-    personalEmail:
+    email:
+      (row.email as string | undefined) ??
       (row.personalEmail as string | undefined) ??
       (row.personal_email as string | undefined) ??
       (row.personalemail as string | undefined) ??
-      (row.email as string | undefined) ??
-      '',
-    workEmail:
       (row.workEmail as string | undefined) ??
       (row.work_email as string | undefined) ??
       (row.workemail as string | undefined) ??
       '',
     department: (row.department as string | undefined) ?? '',
-    categories: (row.categories as CategoryEntry[] | undefined) ?? [],
+    categories: Array.isArray(row.categories)
+      ? (row.categories as Array<Record<string, unknown>>).map((category) => ({
+          title: (category.title as string | undefined) ?? '',
+          committedDays:
+            (category.committedDays as string | undefined) ??
+            (category.committed_days as string | undefined) ??
+            '',
+          actualDays:
+            (category.actualDays as string | undefined) ??
+            (category.actual_days as string | undefined) ??
+            '',
+          reason: (category.reason as string | undefined) ?? '',
+          cmoHelp:
+            (category.cmoHelp as string | undefined) ??
+            (category.cmo_help as string | undefined) ??
+            (category.howCanCmoHelp as string | undefined) ??
+            '',
+        }))
+      : [],
   }
 }
 
@@ -180,29 +200,222 @@ function App() {
   const [categoryMode, setCategoryMode] = useState<CategoryMode | null>(null)
   const [isCategoryModeModalOpen, setIsCategoryModeModalOpen] = useState(false)
   const [customCategoryError, setCustomCategoryError] = useState('')
+  const [categoryValidationError, setCategoryValidationError] = useState('')
+  const [categoryCountError, setCategoryCountError] = useState('')
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(true)
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false)
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [officeFilter, setOfficeFilter] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('')
+  const [dateFromFilter, setDateFromFilter] = useState('')
+  const [dateToFilter, setDateToFilter] = useState('')
 
   const isSupabaseReady = isSupabaseConfigured
   const departmentValue = formData.department.trim()
   const isCustomMode = categoryMode === 'custom'
-  const totalSteps = isCustomMode ? 4 : 3
+  const hasSecondDetailsPage = formData.categories.length > 5
+  const totalSteps = isCustomMode
+    ? hasSecondDetailsPage
+      ? 4
+      : 3
+    : hasSecondDetailsPage
+      ? 3
+      : 2
   const detailsStepOne = isCustomMode ? 3 : 2
-  const detailsStepTwo = isCustomMode ? 4 : 3
+  const detailsStepTwo = hasSecondDetailsPage ? detailsStepOne + 1 : detailsStepOne
   const selectedOfficeLabel = departmentValue || 'Selected Office'
   const selectedOfficeTopCategories = useMemo(
     () => getTopCategoryTitlesForOffice(departmentValue),
     [departmentValue],
   )
 
-  const stepLabels = isCustomMode
-    ? [
-        'Personal Info',
-        'Custom Categories',
-        'Top Categories 1-5',
-        'Top Categories 6-10',
+  const stepLabels = useMemo(() => {
+    if (isCustomMode) {
+      return hasSecondDetailsPage
+        ? [
+            'Personal Info',
+            'Custom Categories',
+            'Top Categories 1-5',
+            'Top Categories 6-10',
+          ]
+        : ['Personal Info', 'Custom Categories', 'Top Categories']
+    }
+
+    return hasSecondDetailsPage
+      ? ['Personal Info', 'Top Categories 1-5', 'Top Categories 6-10']
+      : ['Personal Info', 'Top Categories']
+  }, [isCustomMode, hasSecondDetailsPage])
+
+  const officeFilterOptions = useMemo(
+    () =>
+      [...new Set(reports.map((report) => report.department.trim()).filter(Boolean))].sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    [reports],
+  )
+
+  const categoryFilterOptions = useMemo(
+    () =>
+      [
+        ...new Set(
+          reports
+            .flatMap((report) => report.categories ?? [])
+            .map((category) => category.title.trim())
+            .filter(Boolean),
+        ),
+      ].sort((a, b) => a.localeCompare(b)),
+    [reports],
+  )
+
+  const filteredReports = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase()
+
+    return reports.filter((report) => {
+      if (officeFilter && report.department !== officeFilter) {
+        return false
+      }
+
+      if (
+        categoryFilter &&
+        !(report.categories ?? []).some(
+          (category) => category.title.trim() === categoryFilter,
+        )
+      ) {
+        return false
+      }
+
+      if (dateFromFilter || dateToFilter) {
+        if (!report.created_at) {
+          return false
+        }
+
+        const createdAt = new Date(report.created_at)
+
+        if (Number.isNaN(createdAt.getTime())) {
+          return false
+        }
+
+        if (dateFromFilter) {
+          const fromDate = new Date(`${dateFromFilter}T00:00:00`)
+          if (createdAt < fromDate) {
+            return false
+          }
+        }
+
+        if (dateToFilter) {
+          const toDate = new Date(`${dateToFilter}T23:59:59.999`)
+          if (createdAt > toDate) {
+            return false
+          }
+        }
+      }
+
+      if (!keyword) {
+        return true
+      }
+
+      const haystack = [
+        formatFullName(report),
+        report.phone,
+        report.email,
+        report.department,
+        ...(report.categories ?? []).flatMap((category) => [
+          category.title,
+          category.reason,
+          category.cmoHelp,
+        ]),
       ]
-    : ['Personal Info', 'Top Categories 1-5', 'Top Categories 6-10']
+        .join(' ')
+        .toLowerCase()
+
+      return haystack.includes(keyword)
+    })
+  }, [
+    reports,
+    searchKeyword,
+    officeFilter,
+    categoryFilter,
+    dateFromFilter,
+    dateToFilter,
+  ])
+
+  useEffect(() => {
+    if (step > totalSteps) {
+      setStep(totalSteps)
+    }
+  }, [step, totalSteps])
+
+  useEffect(() => {
+    if (!selectedReport) {
+      return
+    }
+
+    const isStillVisible = filteredReports.some(
+      (report) => report.id === selectedReport.id,
+    )
+
+    if (!isStillVisible) {
+      setSelectedReport(filteredReports[0] ?? null)
+    }
+  }, [filteredReports, selectedReport])
+
+  useEffect(() => {
+    try {
+      const rawDraft = localStorage.getItem(DRAFT_STORAGE_KEY)
+      if (!rawDraft) {
+        return
+      }
+
+      const parsed = JSON.parse(rawDraft) as {
+        formData?: Partial<CaseReport>
+        step?: number
+        categoryMode?: CategoryMode | null
+      }
+
+      if (parsed.categoryMode === 'custom' || parsed.categoryMode === 'system') {
+        setCategoryMode(parsed.categoryMode)
+      }
+
+      if (parsed.formData) {
+        const draftCategories = Array.isArray(parsed.formData.categories)
+          ? parsed.formData.categories
+              .slice(0, MAX_CATEGORIES)
+              .map((category) => ({
+                title: category.title ?? '',
+                committedDays: category.committedDays ?? '',
+                actualDays: category.actualDays ?? '',
+                reason: category.reason ?? '',
+                cmoHelp: category.cmoHelp ?? '',
+              }))
+          : initialFormData().categories
+
+        setFormData((prev) => ({
+          ...prev,
+          ...parsed.formData,
+          categories:
+            draftCategories.length > 0
+              ? draftCategories
+              : initialFormData().categories.slice(0, MIN_CATEGORIES),
+        }))
+      }
+
+      if (typeof parsed.step === 'number' && parsed.step >= 1) {
+        setStep(parsed.step)
+      }
+    } catch {
+      localStorage.removeItem(DRAFT_STORAGE_KEY)
+    }
+  }, [])
+
+  useEffect(() => {
+    const draftPayload = {
+      formData,
+      step,
+      categoryMode,
+    }
+
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftPayload))
+  }, [formData, step, categoryMode])
 
   useEffect(() => {
     if (categoryMode !== 'system') {
@@ -234,6 +447,7 @@ function App() {
               committedDays: '',
               actualDays: '',
               reason: '',
+              cmoHelp: '',
             }
       })
 
@@ -292,6 +506,7 @@ function App() {
     field: keyof CategoryEntry,
     value: string,
   ) => {
+    setCategoryValidationError('')
     setFormData((prev) => {
       const updatedCategories = prev.categories.map((category, catIndex) =>
         catIndex === index ? { ...category, [field]: value } : category,
@@ -300,13 +515,75 @@ function App() {
     })
   }
 
+  const getMissingDetailCategoryIndex = (start: number, end: number) => {
+    for (let index = start; index < Math.min(end, formData.categories.length); index += 1) {
+      const category = formData.categories[index]
+
+      if (
+        !category.committedDays.trim() ||
+        !category.actualDays.trim() ||
+        !category.reason.trim() ||
+        !category.cmoHelp.trim()
+      ) {
+        return index
+      }
+    }
+
+    return -1
+  }
+
+  const handleAddCategory = () => {
+    if (formData.categories.length >= MAX_CATEGORIES) {
+      setCategoryCountError(`You can only add up to ${MAX_CATEGORIES} categories.`)
+      return
+    }
+
+    setCategoryCountError('')
+    setCustomCategoryError('')
+    setCategoryValidationError('')
+
+    const nextIndex = formData.categories.length + 1
+    const nextTitle =
+      categoryMode === 'custom'
+        ? `Custom Category ${nextIndex}`
+        : `Additional Category ${nextIndex}`
+
+    setFormData((prev) => ({
+      ...prev,
+      categories: [
+        ...prev.categories,
+        {
+          title: nextTitle,
+          committedDays: '',
+          actualDays: '',
+          reason: '',
+          cmoHelp: '',
+        },
+      ],
+    }))
+  }
+
+  const handleRemoveCategory = (index: number) => {
+    if (formData.categories.length <= MIN_CATEGORIES) {
+      setCategoryCountError(`At least ${MIN_CATEGORIES} category is required.`)
+      return
+    }
+
+    setCategoryCountError('')
+    setCustomCategoryError('')
+    setCategoryValidationError('')
+    setFormData((prev) => ({
+      ...prev,
+      categories: prev.categories.filter((_, catIndex) => catIndex !== index),
+    }))
+  }
+
   const isPersonalValid =
     formData.firstName.trim() !== '' &&
     formData.middleName.trim() !== '' &&
     formData.lastName.trim() !== '' &&
     formData.phone.trim() !== '' &&
-    formData.personalEmail.includes('@') &&
-    formData.workEmail.includes('@') &&
+    formData.email.includes('@') &&
     formData.department.trim() !== ''
 
   const completedCustomCategories = formData.categories.filter(
@@ -314,6 +591,8 @@ function App() {
   ).length
 
   const handleNext = () => {
+    setCategoryCountError('')
+
     if (step === 1) {
       if (!isPersonalValid) return
       setIsCategoryModeModalOpen(true)
@@ -333,6 +612,19 @@ function App() {
       setCustomCategoryError('')
     }
 
+    if (step === detailsStepOne && hasSecondDetailsPage) {
+      const invalidIndex = getMissingDetailCategoryIndex(0, 5)
+
+      if (invalidIndex >= 0) {
+        setCategoryValidationError(
+          `Please complete Committed Days, Actual Days, Reason for Delays, and How can CMO help? for Top ${invalidIndex + 1} Category.`,
+        )
+        return
+      }
+
+      setCategoryValidationError('')
+    }
+
     setStep((prev) => Math.min(prev + 1, totalSteps))
   }
 
@@ -343,6 +635,17 @@ function App() {
   const handleSubmit = async () => {
     setSubmitError('')
     setSubmitSuccess(null)
+
+    const invalidIndex = getMissingDetailCategoryIndex(0, formData.categories.length)
+
+    if (invalidIndex >= 0) {
+      setCategoryValidationError(
+        `Please complete Committed Days, Actual Days, Reason for Delays, and How can CMO help? for Top ${invalidIndex + 1} Category.`,
+      )
+      return
+    }
+
+    setCategoryValidationError('')
 
     if (!isSupabaseReady) {
       setSubmitError(getSupabaseMissingMessage())
@@ -368,8 +671,9 @@ function App() {
           lastname: payload.lastName,
           namesuffix: payload.nameSuffix,
           phone: payload.phone,
-          personalemail: payload.personalEmail,
-          workemail: payload.workEmail,
+          email: payload.email,
+          personalemail: payload.email,
+          workemail: payload.email,
           department: payload.department,
           categories: payload.categories,
         },
@@ -379,15 +683,16 @@ function App() {
           last_name: payload.lastName,
           name_suffix: payload.nameSuffix,
           phone: payload.phone,
-          personal_email: payload.personalEmail,
-          work_email: payload.workEmail,
+          email: payload.email,
+          personal_email: payload.email,
+          work_email: payload.email,
           department: payload.department,
           categories: payload.categories,
         },
         {
           name: formatFullName(payload),
           phone: payload.phone,
-          email: payload.personalEmail,
+          email: payload.email,
           department: payload.department,
           categories: payload.categories,
         },
@@ -443,6 +748,11 @@ function App() {
       setSubmitSuccess(normalizeReport(inserted))
       setFormData(initialFormData())
       setStep(1)
+      setCategoryMode(null)
+      setCustomCategoryError('')
+      setCategoryCountError('')
+      setCategoryValidationError('')
+      localStorage.removeItem(DRAFT_STORAGE_KEY)
     } catch (error) {
       setSubmitError(getErrorMessage(error, 'Unable to submit the form right now.'))
     } finally {
@@ -452,6 +762,14 @@ function App() {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const resetAdminFilters = () => {
+    setSearchKeyword('')
+    setOfficeFilter('')
+    setCategoryFilter('')
+    setDateFromFilter('')
+    setDateToFilter('')
   }
 
   const applyCategoryMode = (mode: CategoryMode) => {
@@ -486,23 +804,34 @@ function App() {
           <section className="category-card" key={`category-${categoryIndex}`}>
             <header>
               <h3>Top {categoryIndex + 1} Category</h3>
-              {categoryMode === 'custom' ? (
-                <input
-                  className="title-input"
-                  type="text"
-                  value={category.title}
-                  onChange={(event) =>
-                    handleCategoryChange(
-                      categoryIndex,
-                      'title',
-                      event.target.value,
-                    )
-                  }
-                  placeholder={`Custom Category ${categoryIndex + 1}`}
-                />
-              ) : (
-                <span className="tag">{category.title}</span>
-              )}
+              <div className="category-header-actions">
+                {categoryMode === 'custom' ? (
+                  <input
+                    className="title-input"
+                    type="text"
+                    value={category.title}
+                    onChange={(event) =>
+                      handleCategoryChange(
+                        categoryIndex,
+                        'title',
+                        event.target.value,
+                      )
+                    }
+                    placeholder={`Custom Category ${categoryIndex + 1}`}
+                  />
+                ) : (
+                  <span className="tag">{category.title}</span>
+                )}
+                <button
+                  type="button"
+                  className="category-remove-btn"
+                  onClick={() => handleRemoveCategory(categoryIndex)}
+                  aria-label={`Remove Top ${categoryIndex + 1} Category`}
+                  title="Remove category"
+                >
+                  <X size={13} />
+                </button>
+              </div>
             </header>
             <div className="grid">
               <label className="field">
@@ -551,6 +880,21 @@ function App() {
                   )
                 }
                 placeholder="Describe the reason for delays"
+              />
+            </label>
+            <label className="field">
+              <span>How can CMO help?</span>
+              <textarea
+                rows={3}
+                value={category.cmoHelp}
+                onChange={(event) =>
+                  handleCategoryChange(
+                    categoryIndex,
+                    'cmoHelp',
+                    event.target.value,
+                  )
+                }
+                placeholder="Describe how CMO can help address this category"
               />
             </label>
           </section>
@@ -605,7 +949,7 @@ function App() {
           <p className="eyebrow">MyNaga Representatives</p>
           <h1>Case Resolution Form</h1>
           <p className="subtext">
-            Minimalist multi-page form with admin view and printable output.
+            Powered by Ratbridge
           </p>
         </div>
         <nav className="tabs">
@@ -729,26 +1073,14 @@ function App() {
                   />
                 </label>
                 <label className="field">
-                  <span>Personal Email Address</span>
+                  <span>Email Address</span>
                   <input
                     type="email"
-                    value={formData.personalEmail}
+                    value={formData.email}
                     onChange={(event) =>
-                      handleFieldChange('personalEmail', event.target.value)
+                      handleFieldChange('email', event.target.value)
                     }
                     placeholder="name@email.com"
-                    required
-                  />
-                </label>
-                <label className="field">
-                  <span>Work Email Address</span>
-                  <input
-                    type="email"
-                    value={formData.workEmail}
-                    onChange={(event) =>
-                      handleFieldChange('workEmail', event.target.value)
-                    }
-                    placeholder="name@office.gov.ph"
                     required
                   />
                 </label>
@@ -786,8 +1118,16 @@ function App() {
               <div className="custom-category-meta">
                 <span className="pill">Checklist</span>
                 <span>
-                  {completedCustomCategories}/10 categories completed
+                  {completedCustomCategories}/{formData.categories.length} categories completed
                 </span>
+                <button
+                  type="button"
+                  className="btn secondary btn-inline"
+                  onClick={handleAddCategory}
+                  disabled={formData.categories.length >= MAX_CATEGORIES}
+                >
+                  <Plus size={14} /> Add Category
+                </button>
               </div>
               <div className="section-divider" />
               <div className="custom-category-grid">
@@ -796,6 +1136,15 @@ function App() {
                     <div className="custom-category-item-head">
                       <span className="custom-number">{index + 1}</span>
                       <span className="custom-label">Top {index + 1} Category</span>
+                      <button
+                        type="button"
+                        className="category-remove-btn"
+                        onClick={() => handleRemoveCategory(index)}
+                        aria-label={`Remove Top ${index + 1} Category`}
+                        title="Remove category"
+                      >
+                        <X size={13} />
+                      </button>
                     </div>
                     <label className="field compact">
                       <span>Category Name</span>
@@ -818,6 +1167,9 @@ function App() {
               {customCategoryError && (
                 <p className="alert inline-alert">{customCategoryError}</p>
               )}
+              {categoryCountError && (
+                <p className="alert inline-alert">{categoryCountError}</p>
+              )}
             </div>
           )}
 
@@ -832,12 +1184,25 @@ function App() {
               <span className="mode-badge">
                 {categoryMode === 'custom' ? 'Custom Category' : 'System Based'}
               </span>
+              <div className="category-controls no-print">
+                <span className="helper">
+                  Categories: {formData.categories.length} (min {MIN_CATEGORIES}, max {MAX_CATEGORIES})
+                </span>
+                <button
+                  type="button"
+                  className="btn secondary btn-inline"
+                  onClick={handleAddCategory}
+                  disabled={formData.categories.length >= MAX_CATEGORIES}
+                >
+                  <Plus size={14} /> Add Category
+                </button>
+              </div>
               <div className="section-divider" />
               {renderCategoryGroup(0, 5)}
             </div>
           )}
 
-          {step === detailsStepTwo && (
+          {hasSecondDetailsPage && step === detailsStepTwo && (
             <div className="section">
               <h2>{selectedOfficeLabel}: Top Categories of Cases (6 - 10)</h2>
               <p className="subtext">
@@ -848,6 +1213,19 @@ function App() {
               <span className="mode-badge">
                 {categoryMode === 'custom' ? 'Custom Category' : 'System Based'}
               </span>
+              <div className="category-controls no-print">
+                <span className="helper">
+                  Categories: {formData.categories.length} (min {MIN_CATEGORIES}, max {MAX_CATEGORIES})
+                </span>
+                <button
+                  type="button"
+                  className="btn secondary btn-inline"
+                  onClick={handleAddCategory}
+                  disabled={formData.categories.length >= MAX_CATEGORIES}
+                >
+                  <Plus size={14} /> Add Category
+                </button>
+              </div>
               <div className="section-divider" />
               {renderCategoryGroup(5, 10)}
             </div>
@@ -879,6 +1257,8 @@ function App() {
           </div>
 
           {submitError && <p className="alert">{submitError}</p>}
+          {categoryValidationError && <p className="alert">{categoryValidationError}</p>}
+          {categoryCountError && <p className="alert">{categoryCountError}</p>}
           {submitSuccess && (
             <div className="success">
               <p>Form submitted successfully.</p>
@@ -945,13 +1325,76 @@ function App() {
               {loadingReports ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
+          <div className="admin-filters no-print">
+            <label className="field compact">
+              <span>Search keyword</span>
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(event) => setSearchKeyword(event.target.value)}
+                placeholder="Name, email, reason, CMO help..."
+              />
+            </label>
+            <label className="field compact">
+              <span>Office</span>
+              <select
+                value={officeFilter}
+                onChange={(event) => setOfficeFilter(event.target.value)}
+              >
+                <option value="">All offices</option>
+                {officeFilterOptions.map((office) => (
+                  <option key={office} value={office}>
+                    {office}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field compact">
+              <span>Category</span>
+              <select
+                value={categoryFilter}
+                onChange={(event) => setCategoryFilter(event.target.value)}
+              >
+                <option value="">All categories</option>
+                {categoryFilterOptions.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field compact">
+              <span>Date from</span>
+              <input
+                type="date"
+                value={dateFromFilter}
+                onChange={(event) => setDateFromFilter(event.target.value)}
+              />
+            </label>
+            <label className="field compact">
+              <span>Date to</span>
+              <input
+                type="date"
+                value={dateToFilter}
+                onChange={(event) => setDateToFilter(event.target.value)}
+              />
+            </label>
+            <div className="admin-filter-actions">
+              <button className="btn ghost" onClick={resetAdminFilters}>
+                Clear Filters
+              </button>
+            </div>
+          </div>
           {adminError && <p className="alert">{adminError}</p>}
           {!adminError && reports.length === 0 && (
             <p className="helper">No submissions yet.</p>
           )}
+          {!adminError && reports.length > 0 && filteredReports.length === 0 && (
+            <p className="helper">No submissions match the selected filters.</p>
+          )}
           <div className="admin-grid">
             <div className="admin-list">
-              {reports.map((report) => (
+              {filteredReports.map((report) => (
                 <button
                   key={report.id}
                   className={
@@ -1001,12 +1444,8 @@ function App() {
                       <p>{selectedReport.phone}</p>
                     </div>
                     <div>
-                      <p className="label">Personal Email</p>
-                      <p>{selectedReport.personalEmail}</p>
-                    </div>
-                    <div>
-                      <p className="label">Work Email</p>
-                      <p>{selectedReport.workEmail}</p>
+                      <p className="label">Email Address</p>
+                      <p>{selectedReport.email}</p>
                     </div>
                     <div>
                       <p className="label">Department</p>
@@ -1030,6 +1469,10 @@ function App() {
                           </p>
                           <p>
                             <strong>Reason:</strong> {category.reason || '—'}
+                          </p>
+                          <p>
+                            <strong>How CMO can help:</strong>{' '}
+                            {category.cmoHelp || '—'}
                           </p>
                         </div>
                       ))}
