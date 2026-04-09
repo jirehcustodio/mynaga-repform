@@ -828,6 +828,7 @@ function App() {
                   onClick={() => handleRemoveCategory(categoryIndex)}
                   aria-label={`Remove Top ${categoryIndex + 1} Category`}
                   title="Remove category"
+                  disabled={formData.categories.length <= MIN_CATEGORIES}
                 >
                   <X size={13} />
                 </button>
@@ -1142,6 +1143,7 @@ function App() {
                         onClick={() => handleRemoveCategory(index)}
                         aria-label={`Remove Top ${index + 1} Category`}
                         title="Remove category"
+                        disabled={formData.categories.length <= MIN_CATEGORIES}
                       >
                         <X size={13} />
                       </button>

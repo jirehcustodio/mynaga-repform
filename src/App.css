@@ -347,6 +347,17 @@ h4 {
   background: #fef2f2;
 }
 
+.category-remove-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.category-remove-btn:disabled:hover {
+  border-color: #d8dde6;
+  color: #64748b;
+  background: #fff;
+}
+
 .category-controls {
   margin-top: 12px;
   display: flex;
