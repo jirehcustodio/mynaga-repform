@@ -180,6 +180,8 @@ function App() {
   const [categoryMode, setCategoryMode] = useState<CategoryMode | null>(null)
   const [isCategoryModeModalOpen, setIsCategoryModeModalOpen] = useState(false)
   const [customCategoryError, setCustomCategoryError] = useState('')
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(true)
+  const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false)
 
   const isSupabaseReady = isSupabaseConfigured
   const departmentValue = formData.department.trim()
@@ -468,6 +470,14 @@ function App() {
     setStep(2)
   }
 
+  const handleAcceptTerms = () => {
+    if (!hasAgreedToTerms) {
+      return
+    }
+
+    setIsTermsModalOpen(false)
+  }
+
   const renderCategoryGroup = (start: number, end: number) => (
     <div className="category-grid">
       {formData.categories.slice(start, end).map((category, index) => {
@@ -551,6 +561,45 @@ function App() {
 
   return (
     <div className="app">
+      {isTermsModalOpen && (
+        <div className="terms-overlay" role="dialog" aria-modal="true">
+          <div className="terms-card">
+            <h2>Terms and Conditions</h2>
+            <p className="subtext terms-text">
+              By continuing with this form, you confirm that all information you
+              provide is true, accurate, and submitted in good faith. You agree
+              that false, misleading, or incomplete entries may affect review,
+              routing, and processing of your concern.
+            </p>
+            <p className="subtext terms-text">
+              You also understand that submitted data may be used by the City
+              Government for official case handling, reporting, and service
+              improvement. Please ensure details are honest and complete before
+              proceeding.
+            </p>
+            <label className="terms-check">
+              <input
+                type="checkbox"
+                checked={hasAgreedToTerms}
+                onChange={(event) => setHasAgreedToTerms(event.target.checked)}
+              />
+              <span>
+                I confirm that I will provide true and honest information.
+              </span>
+            </label>
+            <div className="terms-actions">
+              <button
+                className={hasAgreedToTerms ? 'btn terms-accept ready' : 'btn terms-accept'}
+                onClick={handleAcceptTerms}
+                disabled={!hasAgreedToTerms}
+              >
+                Accept and Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="app-header no-print">
         <div>
           <p className="eyebrow">MyNaga Representatives</p>

@@ -585,6 +585,67 @@ h4 {
   z-index: 40;
 }
 
+.terms-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 23, 31, 0.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 70;
+}
+
+.terms-card {
+  width: min(720px, 100%);
+  max-height: min(90vh, 760px);
+  overflow: auto;
+  background: #fffdf9;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.2);
+}
+
+.terms-text {
+  margin-top: 10px;
+  line-height: 1.55;
+}
+
+.terms-check {
+  margin-top: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text);
+}
+
+.terms-check input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+}
+
+.terms-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.terms-accept {
+  opacity: 0.45;
+}
+
+.terms-accept.ready {
+  opacity: 1;
+  box-shadow: 0 0 0 0 rgba(91, 110, 166, 0.4), 0 10px 20px rgba(91, 110, 166, 0.3);
+}
+
+.terms-accept.ready:hover {
+  box-shadow: 0 0 0 6px rgba(91, 110, 166, 0.12), 0 10px 20px rgba(91, 110, 166, 0.3);
+}
+
 .modal-card {
   width: min(680px, 100%);
   background: #fff;
