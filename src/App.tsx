@@ -836,7 +836,7 @@ function App() {
             </header>
             <div className="grid">
               <label className="field">
-                <span>Committed ideal time (Days)</span>
+                <span>Expected Processing Time (in days)</span>
                 <input
                   type="number"
                   min="0"
@@ -848,11 +848,11 @@ function App() {
                       event.target.value,
                     )
                   }
-                  placeholder="e.g. 3"
+                  placeholder="Example: 3 days"
                 />
               </label>
               <label className="field">
-                <span>Actual resolution time (Days)</span>
+                <span>Actual Time Taken (in days)</span>
                 <input
                   type="number"
                   min="0"
@@ -864,12 +864,12 @@ function App() {
                       event.target.value,
                     )
                   }
-                  placeholder="e.g. 4"
+                  placeholder="Example: 4 days"
                 />
               </label>
             </div>
             <label className="field">
-              <span>Reason for delays</span>
+              <span>If there was a delay, what caused it?</span>
               <textarea
                 rows={3}
                 value={category.reason}
@@ -880,11 +880,11 @@ function App() {
                     event.target.value,
                   )
                 }
-                placeholder="Describe the reason for delays"
+                placeholder="Please briefly explain what caused the delay"
               />
             </label>
             <label className="field">
-              <span>How can CMO help?</span>
+              <span>What support do you need from CMO?</span>
               <textarea
                 rows={3}
                 value={category.cmoHelp}
@@ -895,7 +895,7 @@ function App() {
                     event.target.value,
                   )
                 }
-                placeholder="Describe how CMO can help address this category"
+                placeholder="Please describe what assistance from CMO would help"
               />
             </label>
           </section>
