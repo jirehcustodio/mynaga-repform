@@ -549,6 +549,10 @@ h4 {
   padding: 16px;
 }
 
+.response-print-area {
+  margin-top: 16px;
+}
+
 .detail-header {
   display: flex;
   align-items: center;
@@ -800,12 +804,42 @@ h4 {
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
   body {
     background: #fff;
+    color: #111827;
+    font-size: 11pt;
+    line-height: 1.35;
   }
 
   .no-print {
     display: none !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+  }
+
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: #fff;
+    padding: 0;
   }
 
   .card {
@@ -815,7 +849,22 @@ h4 {
   }
 
   .print-area {
-    border: none;
-    padding: 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .detail-card,
+  .detail-grid > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .detail-header h3 {
+    margin: 0 0 4px;
+    font-size: 16pt;
+  }
+
+  .label {
+    color: #374151;
   }
 }

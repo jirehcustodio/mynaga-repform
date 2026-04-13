@@ -1270,13 +1270,74 @@ function App() {
             </div>
           )}
 
+          {submitSuccess && (
+            <div className="print-area response-print-area">
+              <div className="detail-header">
+                <div>
+                  <h3>Case Resolution Form Submission</h3>
+                  <p className="subtext">
+                    {submitSuccess.created_at
+                      ? new Date(submitSuccess.created_at).toLocaleString()
+                      : ''}
+                  </p>
+                </div>
+              </div>
+              <div className="detail-grid">
+                <div>
+                  <p className="label">Name</p>
+                  <p>{formatFullName(submitSuccess)}</p>
+                </div>
+                <div>
+                  <p className="label">Phone</p>
+                  <p>{submitSuccess.phone}</p>
+                </div>
+                <div>
+                  <p className="label">Email Address</p>
+                  <p>{submitSuccess.email}</p>
+                </div>
+                <div>
+                  <p className="label">Department</p>
+                  <p>{submitSuccess.department}</p>
+                </div>
+              </div>
+              {submitSuccess.categories?.length > 0 && (
+                <div className="detail-categories">
+                  {submitSuccess.categories.map((category, index) => (
+                    <div className="detail-card" key={`${category.title}-${index}`}>
+                      <h4>
+                        Top {index + 1}: {category.title}
+                      </h4>
+                      <p>
+                        <strong>Expected Processing Time:</strong>{' '}
+                        {category.committedDays || '—'} days
+                      </p>
+                      <p>
+                        <strong>Actual Time Taken:</strong>{' '}
+                        {category.actualDays || '—'} days
+                      </p>
+                      <p>
+                        <strong>Delay Cause:</strong> {category.reason || '—'}
+                      </p>
+                      <p>
+                        <strong>Support Requested from CMO:</strong>{' '}
+                        {category.cmoHelp || '—'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {isCategoryModeModalOpen && (
             <div className="modal-overlay no-print" role="dialog" aria-modal="true">
               <div className="modal-card">
                 <h3>Choose Category Source</h3>
                 <p className="subtext">
-                  Select how you want to fill Top 10 categories for{' '}
-                  {selectedOfficeLabel}.
+                  Description: Choose how you want to set the categories for
+                  discussion. You may use the suggested categories based on
+                  current reports, or add your own categories if you already
+                  have specific topics to raise.
                 </p>
                 <div className="modal-actions">
                   <button
@@ -1287,7 +1348,7 @@ function App() {
                       <Sparkles size={22} />
                     </span>
                     <span className="modal-option-text">
-                      <strong>Custom Category</strong>
+                      <strong>Add your own categories</strong>
                       <small>Define your own Top 10 categories first</small>
                     </span>
                   </button>
@@ -1299,7 +1360,7 @@ function App() {
                       <ListOrdered size={22} />
                     </span>
                     <span className="modal-option-text">
-                      <strong>System Based</strong>
+                      <strong>Use suggested categories</strong>
                       <small>Use Top 10 categories from spreadsheet source</small>
                     </span>
                   </button>
@@ -1432,7 +1493,7 @@ function App() {
                           : ''}
                       </p>
                     </div>
-                    <button className="btn" onClick={handlePrint}>
+                    <button className="btn no-print" onClick={handlePrint}>
                       Print
                     </button>
                   </div>
