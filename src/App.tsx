@@ -217,6 +217,10 @@ function App() {
   const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false)
   const [adminUsername, setAdminUsername] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
+  const [adminSession, setAdminSession] = useState<{
+    username: string
+    password: string
+  } | null>(null)
   const [adminAuthLoading, setAdminAuthLoading] = useState(false)
   const [adminAuthError, setAdminAuthError] = useState('')
 
@@ -891,6 +895,7 @@ function App() {
         return
       }
 
+      setAdminSession({ username, password })
       setIsAdminAuthenticated(true)
       setIsAdminAuthModalOpen(false)
       setAdminPassword('')
@@ -907,6 +912,7 @@ function App() {
     setIsAdminAuthModalOpen(false)
     setAdminUsername('')
     setAdminPassword('')
+    setAdminSession(null)
     setAdminAuthError('')
     setView('form')
     setSelectedReport(null)
@@ -935,17 +941,29 @@ function App() {
         throw new Error('Supabase is not configured.')
       }
 
-      const { error } = await supabase
-        .from('case_reports')
-        .delete()
-        .eq('id', reportId)
+      if (!adminSession?.username || !adminSession.password) {
+        throw new Error('Admin session expired. Please login again.')
+      }
+
+      const { data, error } = await supabase.rpc('delete_case_report_as_admin', {
+        p_report_id: reportId,
+        p_username: adminSession.username,
+        p_password: adminSession.password,
+      })
 
       if (error) {
         throw error
       }
 
+      if (!data) {
+        throw new Error(
+          'Delete was not applied. Please verify admin credentials and Supabase function setup.',
+        )
+      }
+
       setReports((prev) => prev.filter((report) => report.id !== reportId))
       setSelectedReport((prev) => (prev?.id === reportId ? null : prev))
+      await fetchReports()
     } catch (error) {
       setAdminError(getErrorMessage(error, 'Unable to delete submission.'))
     }

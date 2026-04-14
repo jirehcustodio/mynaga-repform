@@ -79,6 +79,8 @@ insert into public.admin_users (username, password)
 values ('admin', 'ChangeThisStrongPassword');
 ```
 
+The same setup script also creates `delete_case_report_as_admin(...)`, used by the app so deletes persist even after refresh.
+
 > Note: this starter setup stores password as plain text for simplicity. For production,
 > use Supabase Auth or store password hashes only.
 

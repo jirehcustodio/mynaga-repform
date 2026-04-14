@@ -26,3 +26,39 @@ begin
       using (true);
   end if;
 end $$;
+
+-- Credential-verified delete function for admin-only response deletion
+create or replace function public.delete_case_report_as_admin(
+  p_report_id uuid,
+  p_username text,
+  p_password text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  is_valid_admin boolean;
+begin
+  select exists (
+    select 1
+    from public.admin_users
+    where username = p_username
+      and password = p_password
+  )
+  into is_valid_admin;
+
+  if not is_valid_admin then
+    return false;
+  end if;
+
+  delete from public.case_reports
+  where id = p_report_id;
+
+  return found;
+end;
+$$;
+
+grant execute on function public.delete_case_report_as_admin(uuid, text, text)
+to anon, authenticated;
