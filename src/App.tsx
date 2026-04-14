@@ -689,6 +689,10 @@ function App() {
       const payloadVariants: Array<Record<string, unknown>> = [
         payload,
         {
+          firstName: payload.firstName,
+          middleName: payload.middleName,
+          lastName: payload.lastName,
+          nameSuffix: payload.nameSuffix,
           firstname: payload.firstName,
           middlename: payload.middleName,
           lastname: payload.lastName,
@@ -701,6 +705,10 @@ function App() {
           categories: payload.categories,
         },
         {
+          firstName: payload.firstName,
+          middleName: payload.middleName,
+          lastName: payload.lastName,
+          nameSuffix: payload.nameSuffix,
           first_name: payload.firstName,
           middle_name: payload.middleName,
           last_name: payload.lastName,
@@ -713,6 +721,10 @@ function App() {
           categories: payload.categories,
         },
         {
+          firstName: payload.firstName,
+          middleName: payload.middleName,
+          lastName: payload.lastName,
+          nameSuffix: payload.nameSuffix,
           name: formatFullName(payload),
           phone: payload.phone,
           email: payload.email,
@@ -720,8 +732,13 @@ function App() {
           categories: payload.categories,
         },
         {
+          firstName: payload.firstName,
+          middleName: payload.middleName,
+          lastName: payload.lastName,
+          nameSuffix: payload.nameSuffix,
           name: formatFullName(payload),
           phone: payload.phone,
+          email: payload.email,
           department: payload.department,
           categories: payload.categories,
         },
