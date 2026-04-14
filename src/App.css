@@ -886,9 +886,7 @@ h4 {
   }
 
   .print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: static;
     width: 100%;
     margin: 0;
     border: none;
@@ -902,6 +900,7 @@ h4 {
     border: none;
     box-shadow: none;
     padding: 0;
+    overflow: visible !important;
   }
 
   .detail-categories {

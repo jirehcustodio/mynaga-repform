@@ -1562,7 +1562,7 @@ function App() {
                         Total categories included: {selectedReport.categories.length}
                       </p>
                       {selectedReport.categories.map((category, index) => (
-                        <div className="detail-card" key={category.title}>
+                        <div className="detail-card" key={`${category.title}-${index}`}>
                           <h4>
                             Top {index + 1}: {category.title}
                           </h4>
