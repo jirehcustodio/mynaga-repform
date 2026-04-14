@@ -944,6 +944,12 @@ h4 {
     margin: 12mm;
   }
 
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
   body {
     background: #fff;
     color: #111827;
@@ -955,13 +961,26 @@ h4 {
     display: none !important;
   }
 
-  body * {
-    visibility: hidden !important;
+  .app {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
   }
 
-  .print-area,
-  .print-area * {
-    visibility: visible !important;
+  .response-print-area {
+    margin-top: 0 !important;
+  }
+
+  .card > :not(.response-print-area):not(.admin-grid) {
+    display: none !important;
+  }
+
+  .admin-grid > :not(.admin-detail) {
+    display: none !important;
+  }
+
+  .admin-detail > :not(.print-area) {
+    display: none !important;
   }
 
   .print-area {
