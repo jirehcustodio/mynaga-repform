@@ -19,23 +19,38 @@ A minimalist, multi-page web form inspired by Google Forms. It collects personal
 
 ## Supabase Schema (SQL)
 
-Create the table:
+### Recommended canonical schema (single email)
 
 ```sql
 create table if not exists case_reports (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default timezone('utc'::text, now()),
-  firstName text not null,
-  middleName text not null,
-  lastName text not null,
-  nameSuffix text,
+  "firstName" text not null,
+  "middleName" text not null,
+  "lastName" text not null,
+  "nameSuffix" text,
   phone text not null,
-  personalEmail text not null,
-  workEmail text not null,
+  email text not null,
   department text not null,
   categories jsonb not null default '[]'::jsonb
 );
 ```
+
+### Existing project already has mixed columns?
+
+If your table has legacy variants like `first_name`, `firstname`,
+`personalEmail`, `personal_email`, etc., run:
+
+`scripts/case-reports-schema-cleanup.sql`
+
+in Supabase SQL Editor.
+
+This script will:
+
+- ensure canonical columns exist (`firstName`, `middleName`, `lastName`, `nameSuffix`, `email`)
+- backfill canonical values from legacy variants
+- enforce `NOT NULL` where expected
+- keep legacy columns for safety (optional cleanup commands included at the bottom)
 
 Enable Row Level Security (RLS) and policies for testing:
 
