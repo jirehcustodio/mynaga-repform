@@ -68,6 +68,20 @@ create policy "Public can read" on case_reports
 
 Adjust policies for production as needed.
 
+## Admin Login Setup (Supabase)
+
+The Admin tab now requires credentials from a Supabase table.
+
+Run `scripts/admin-users-setup.sql` in Supabase SQL Editor, then insert an admin account:
+
+```sql
+insert into public.admin_users (username, password)
+values ('admin', 'ChangeThisStrongPassword');
+```
+
+> Note: this starter setup stores password as plain text for simplicity. For production,
+> use Supabase Auth or store password hashes only.
+
 ## Printing
 
 Use the **Print** button on a submission or after submitting a form, then choose **Save as PDF** in your browser’s print dialog.

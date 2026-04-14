@@ -469,6 +469,12 @@ h4 {
   gap: 16px;
 }
 
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .admin-filters {
   margin-top: 14px;
   display: grid;
@@ -515,6 +521,43 @@ h4 {
   cursor: pointer;
   text-align: left;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.list-card-main {
+  border: none;
+  background: transparent;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.list-card-delete {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  background: #fff5f5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.list-card-delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.list-card-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .list-card:hover {
@@ -568,6 +611,17 @@ h4 {
   margin-top: 12px;
 }
 
+.detail-grid > div {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+}
+
+.detail-grid p {
+  margin: 0;
+}
+
 .label {
   color: var(--muted);
   font-size: 12px;
@@ -591,6 +645,10 @@ h4 {
   border-radius: 10px;
   padding: 12px;
   background: var(--bg);
+}
+
+.detail-card p {
+  margin: 6px 0;
 }
 
 .detail-card h4 {
@@ -779,6 +837,22 @@ h4 {
   font-size: 12px;
 }
 
+.admin-auth-modal {
+  width: min(520px, 100%);
+}
+
+.auth-grid {
+  margin-top: 14px;
+  grid-template-columns: 1fr;
+}
+
+.admin-auth-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .cookie-banner {
   position: fixed;
   left: 20px;
@@ -850,6 +924,11 @@ h4 {
     grid-template-columns: 1fr;
   }
 
+  .admin-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .actions {
     flex-direction: column;
   }
@@ -907,6 +986,18 @@ h4 {
     display: grid;
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+
+  .detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .detail-grid > div {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px;
+    background: #fff;
   }
 
   .detail-card,

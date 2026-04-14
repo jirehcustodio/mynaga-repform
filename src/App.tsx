@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ListOrdered, Plus, Sparkles, X } from 'lucide-react'
+import { ListOrdered, Plus, Sparkles, Trash2, X } from 'lucide-react'
 import './App.css'
 import { caseCategories } from './data/categories'
 import { officeTopCategories } from './data/officeTopCategories'
@@ -16,6 +16,7 @@ const MIN_CATEGORIES = 1
 const MAX_CATEGORIES = 10
 const DRAFT_STORAGE_KEY = 'mynaga_case_form_draft_v1'
 const COOKIE_CONSENT_KEY = 'mynaga_cookie_consent_v1'
+const ADMIN_USERS_TABLE = 'admin_users'
 
 const createCategoryEntries = (titles: string[]): CategoryEntry[] =>
   titles.map((title) => ({
@@ -212,6 +213,12 @@ function App() {
   const [categoryFilter, setCategoryFilter] = useState('')
   const [dateFromFilter, setDateFromFilter] = useState('')
   const [dateToFilter, setDateToFilter] = useState('')
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false)
+  const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false)
+  const [adminUsername, setAdminUsername] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
+  const [adminAuthLoading, setAdminAuthLoading] = useState(false)
+  const [adminAuthError, setAdminAuthError] = useState('')
 
   const isSupabaseReady = isSupabaseConfigured
   const departmentValue = formData.department.trim()
@@ -836,6 +843,114 @@ function App() {
     window.print()
   }
 
+  const openAdminView = () => {
+    if (isAdminAuthenticated) {
+      setView('admin')
+      return
+    }
+
+    setAdminAuthError('')
+    setIsAdminAuthModalOpen(true)
+  }
+
+  const handleAdminLogin = async () => {
+    setAdminAuthError('')
+
+    const username = adminUsername.trim()
+    const password = adminPassword
+
+    if (!username || !password) {
+      setAdminAuthError('Please enter admin username and password.')
+      return
+    }
+
+    if (!isSupabaseReady) {
+      setAdminAuthError(getSupabaseMissingMessage())
+      return
+    }
+
+    setAdminAuthLoading(true)
+
+    try {
+      if (!supabase) {
+        throw new Error('Supabase is not configured.')
+      }
+
+      const { data, error } = await supabase
+        .from(ADMIN_USERS_TABLE)
+        .select('username, password')
+        .eq('username', username)
+        .maybeSingle()
+
+      if (error) {
+        throw error
+      }
+
+      if (!data || data.password !== password) {
+        setAdminAuthError('Invalid admin credentials.')
+        return
+      }
+
+      setIsAdminAuthenticated(true)
+      setIsAdminAuthModalOpen(false)
+      setAdminPassword('')
+      setView('admin')
+    } catch (error) {
+      setAdminAuthError(getErrorMessage(error, 'Unable to login as admin.'))
+    } finally {
+      setAdminAuthLoading(false)
+    }
+  }
+
+  const handleAdminLogout = () => {
+    setIsAdminAuthenticated(false)
+    setIsAdminAuthModalOpen(false)
+    setAdminUsername('')
+    setAdminPassword('')
+    setAdminAuthError('')
+    setView('form')
+    setSelectedReport(null)
+  }
+
+  const handleDeleteReport = async (reportId?: string) => {
+    if (!reportId || !isAdminAuthenticated) {
+      return
+    }
+
+    const shouldDelete = window.confirm(
+      'Are you sure you want to permanently delete this response?',
+    )
+
+    if (!shouldDelete) {
+      return
+    }
+
+    if (!isSupabaseReady) {
+      setAdminError(getSupabaseMissingMessage())
+      return
+    }
+
+    try {
+      if (!supabase) {
+        throw new Error('Supabase is not configured.')
+      }
+
+      const { error } = await supabase
+        .from('case_reports')
+        .delete()
+        .eq('id', reportId)
+
+      if (error) {
+        throw error
+      }
+
+      setReports((prev) => prev.filter((report) => report.id !== reportId))
+      setSelectedReport((prev) => (prev?.id === reportId ? null : prev))
+    } catch (error) {
+      setAdminError(getErrorMessage(error, 'Unable to delete submission.'))
+    }
+  }
+
   const resetAdminFilters = () => {
     setSearchKeyword('')
     setOfficeFilter('')
@@ -1045,7 +1160,7 @@ function App() {
           </button>
           <button
             className={view === 'admin' ? 'tab active' : 'tab'}
-            onClick={() => setView('admin')}
+            onClick={openAdminView}
           >
             Admin
           </button>
@@ -1466,13 +1581,18 @@ function App() {
                 Review submissions and print reports.
               </p>
             </div>
-            <button
-              className="btn secondary"
-              onClick={fetchReports}
-              disabled={loadingReports}
-            >
-              {loadingReports ? 'Refreshing...' : 'Refresh'}
-            </button>
+            <div className="admin-header-actions">
+              <button
+                className="btn secondary"
+                onClick={fetchReports}
+                disabled={loadingReports}
+              >
+                {loadingReports ? 'Refreshing...' : 'Refresh'}
+              </button>
+              <button className="btn ghost" onClick={handleAdminLogout}>
+                Logout
+              </button>
+            </div>
           </div>
           <div className="admin-filters no-print">
             <label className="field compact">
@@ -1544,25 +1664,39 @@ function App() {
           <div className="admin-grid">
             <div className="admin-list">
               {filteredReports.map((report) => (
-                <button
+                <div
                   key={report.id}
                   className={
                     selectedReport?.id === report.id
                       ? 'list-card active'
                       : 'list-card'
                   }
-                  onClick={() => setSelectedReport(report)}
                 >
-                  <div>
-                    <h3>{formatFullName(report)}</h3>
-                    <p>{report.department}</p>
-                  </div>
-                  <span>
-                    {report.created_at
-                      ? new Date(report.created_at).toLocaleString()
-                      : 'Pending'}
-                  </span>
-                </button>
+                  <button
+                    className="list-card-main"
+                    onClick={() => setSelectedReport(report)}
+                  >
+                    <div>
+                      <h3>{formatFullName(report)}</h3>
+                      <p>{report.department}</p>
+                    </div>
+                    <span>
+                      {report.created_at
+                        ? new Date(report.created_at).toLocaleString()
+                        : 'Pending'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="list-card-delete no-print"
+                    onClick={() => handleDeleteReport(report.id)}
+                    title="Delete response"
+                    aria-label="Delete response"
+                    disabled={!report.id || !isAdminAuthenticated}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               ))}
             </div>
             <div className="admin-detail">
@@ -1702,6 +1836,55 @@ function App() {
           <button className="btn" onClick={handleAcceptCookies}>
             Accept Cookies
           </button>
+        </div>
+      )}
+
+      {isAdminAuthModalOpen && (
+        <div className="modal-overlay no-print" role="dialog" aria-modal="true">
+          <div className="modal-card admin-auth-modal">
+            <h3>Admin Login</h3>
+            <p className="subtext">
+              Enter your admin credentials to view and manage submissions.
+              Credentials are verified against your Supabase `admin_users` table.
+            </p>
+            <div className="grid auth-grid">
+              <label className="field">
+                <span>Username</span>
+                <input
+                  type="text"
+                  value={adminUsername}
+                  onChange={(event) => setAdminUsername(event.target.value)}
+                  placeholder="admin"
+                />
+              </label>
+              <label className="field">
+                <span>Password</span>
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(event) => setAdminPassword(event.target.value)}
+                  placeholder="••••••••"
+                />
+              </label>
+            </div>
+            {adminAuthError && <p className="alert inline-alert">{adminAuthError}</p>}
+            <div className="admin-auth-actions">
+              <button
+                className="btn ghost"
+                onClick={() => setIsAdminAuthModalOpen(false)}
+                disabled={adminAuthLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn"
+                onClick={handleAdminLogin}
+                disabled={adminAuthLoading}
+              >
+                {adminAuthLoading ? 'Signing in...' : 'Login as Admin'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
