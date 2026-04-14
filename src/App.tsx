@@ -15,6 +15,7 @@ type CategoryMode = 'custom' | 'system'
 const MIN_CATEGORIES = 1
 const MAX_CATEGORIES = 10
 const DRAFT_STORAGE_KEY = 'mynaga_case_form_draft_v1'
+const COOKIE_CONSENT_KEY = 'mynaga_cookie_consent_v1'
 
 const createCategoryEntries = (titles: string[]): CategoryEntry[] =>
   titles.map((title) => ({
@@ -204,6 +205,8 @@ function App() {
   const [categoryCountError, setCategoryCountError] = useState('')
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(true)
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false)
+  const [hasAcceptedCookies, setHasAcceptedCookies] = useState(false)
+  const [isCookieBannerOpen, setIsCookieBannerOpen] = useState(false)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [officeFilter, setOfficeFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
@@ -361,6 +364,22 @@ function App() {
 
   useEffect(() => {
     try {
+      const cookieConsent = localStorage.getItem(COOKIE_CONSENT_KEY)
+      const isAccepted = cookieConsent === 'accepted'
+      setHasAcceptedCookies(isAccepted)
+      setIsCookieBannerOpen(!isAccepted)
+    } catch {
+      setHasAcceptedCookies(false)
+      setIsCookieBannerOpen(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!hasAcceptedCookies) {
+      return
+    }
+
+    try {
       const rawDraft = localStorage.getItem(DRAFT_STORAGE_KEY)
       if (!rawDraft) {
         return
@@ -405,9 +424,13 @@ function App() {
     } catch {
       localStorage.removeItem(DRAFT_STORAGE_KEY)
     }
-  }, [])
+  }, [hasAcceptedCookies])
 
   useEffect(() => {
+    if (!hasAcceptedCookies) {
+      return
+    }
+
     const draftPayload = {
       formData,
       step,
@@ -415,7 +438,7 @@ function App() {
     }
 
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftPayload))
-  }, [formData, step, categoryMode])
+  }, [formData, step, categoryMode, hasAcceptedCookies])
 
   useEffect(() => {
     if (categoryMode !== 'system') {
@@ -798,6 +821,17 @@ function App() {
     }
 
     setIsTermsModalOpen(false)
+  }
+
+  const handleAcceptCookies = () => {
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted')
+    } catch {
+      // noop
+    }
+
+    setHasAcceptedCookies(true)
+    setIsCookieBannerOpen(false)
   }
 
   const renderCategoryGroup = (start: number, end: number) => (
@@ -1609,6 +1643,21 @@ function App() {
             </div>
           </div>
         </section>
+      )}
+
+      {isCookieBannerOpen && (
+        <div className="cookie-banner no-print" role="dialog" aria-live="polite">
+          <div className="cookie-banner-content">
+            <strong>Cookie & Offline Draft Saving</strong>
+            <p>
+              Please accept cookies/local storage so your form draft stays saved
+              in this browser, even when internet connection is lost.
+            </p>
+          </div>
+          <button className="btn" onClick={handleAcceptCookies}>
+            Accept Cookies
+          </button>
+        </div>
       )}
     </div>
   )
