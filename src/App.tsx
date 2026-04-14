@@ -745,7 +745,11 @@ function App() {
         throw lastError ?? new Error('Unable to submit the form right now.')
       }
 
-      setSubmitSuccess(normalizeReport(inserted))
+      setSubmitSuccess({
+        ...payload,
+        ...normalizeReport(inserted),
+        categories: payload.categories,
+      })
       setFormData(initialFormData())
       setStep(1)
       setCategoryMode(null)
@@ -1302,6 +1306,9 @@ function App() {
               </div>
               {submitSuccess.categories?.length > 0 && (
                 <div className="detail-categories">
+                  <p className="helper print-category-count">
+                    Total categories included: {submitSuccess.categories.length}
+                  </p>
                   {submitSuccess.categories.map((category, index) => (
                     <div className="detail-card" key={`${category.title}-${index}`}>
                       <h4>
@@ -1517,6 +1524,9 @@ function App() {
                   </div>
                   {selectedReport.categories?.length > 0 && (
                     <div className="detail-categories">
+                      <p className="helper print-category-count">
+                        Total categories included: {selectedReport.categories.length}
+                      </p>
                       {selectedReport.categories.map((category, index) => (
                         <div className="detail-card" key={category.title}>
                           <h4>
