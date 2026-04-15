@@ -188,6 +188,14 @@ const getSupabaseMissingMessage = () => {
   return `Supabase environment variables are missing: ${missing.join(', ')}`
 }
 
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+
 function App() {
   const [view, setView] = useState<'form' | 'admin' | 'analytics'>('form')
   const [step, setStep] = useState(1)
@@ -845,6 +853,72 @@ function App() {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleDownloadSubmission = (report: CaseReport) => {
+    const fullName = formatFullName(report) || 'Unnamed Submission'
+    const safeName = fullName
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9]+/g, '-')
+      .replaceAll(/(^-|-$)/g, '')
+
+    const categoryRows = (report.categories ?? [])
+      .map(
+        (category, index) => `
+          <section class="detail-card">
+            <h3>Top ${index + 1}: ${escapeHtml(category.title || 'N/A')}</h3>
+            <p><strong>Expected Processing Time:</strong> ${escapeHtml(category.committedDays || '—')} days</p>
+            <p><strong>Actual Time Taken:</strong> ${escapeHtml(category.actualDays || '—')} days</p>
+            <p><strong>Delay Cause:</strong> ${escapeHtml(category.reason || '—')}</p>
+            <p><strong>Support Requested from CMO:</strong> ${escapeHtml(category.cmoHelp || '—')}</p>
+          </section>
+        `,
+      )
+      .join('')
+
+    const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(fullName)} - Submission</title>
+    <style>
+      body { font-family: Arial, sans-serif; color: #111827; margin: 24px; line-height: 1.45; }
+      h1 { margin: 0 0 8px; font-size: 22px; }
+      h2 { margin: 20px 0 8px; font-size: 16px; }
+      h3 { margin: 0 0 8px; font-size: 14px; }
+      .meta { color: #4b5563; margin-bottom: 14px; font-size: 13px; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .cell { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; }
+      .label { text-transform: uppercase; letter-spacing: .04em; color: #6b7280; font-size: 11px; margin-bottom: 4px; }
+      .detail-card { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; margin-top: 10px; }
+      p { margin: 6px 0; }
+      @media print { body { margin: 0; } }
+    </style>
+  </head>
+  <body>
+    <h1>Case Resolution Form Submission</h1>
+    <div class="meta">Generated on ${new Date().toLocaleString()}</div>
+    <div class="grid">
+      <div class="cell"><div class="label">Name</div><div>${escapeHtml(fullName)}</div></div>
+      <div class="cell"><div class="label">Phone</div><div>${escapeHtml(report.phone || '—')}</div></div>
+      <div class="cell"><div class="label">Email Address</div><div>${escapeHtml(report.email || '—')}</div></div>
+      <div class="cell"><div class="label">Department</div><div>${escapeHtml(report.department || '—')}</div></div>
+    </div>
+    <h2>Categories (${report.categories?.length ?? 0})</h2>
+    ${categoryRows || '<p>No categories provided.</p>'}
+  </body>
+</html>`
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${safeName || 'submission'}-${report.id ?? 'report'}.html`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
   }
 
   const openAdminView = () => {
@@ -1731,9 +1805,17 @@ function App() {
                           : ''}
                       </p>
                     </div>
-                    <button className="btn no-print" onClick={handlePrint}>
-                      Print
-                    </button>
+                    <div className="admin-header-actions no-print">
+                      <button
+                        className="btn secondary"
+                        onClick={() => handleDownloadSubmission(selectedReport)}
+                      >
+                        Download
+                      </button>
+                      <button className="btn" onClick={handlePrint}>
+                        Print
+                      </button>
+                    </div>
                   </div>
                   <div className="detail-grid">
                     <div>
