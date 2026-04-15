@@ -888,6 +888,15 @@ function App() {
       y += lines.length * spacing + 4
     }
 
+    const filledCategories = (report.categories ?? []).filter((category) =>
+      [
+        category.committedDays,
+        category.actualDays,
+        category.reason,
+        category.cmoHelp,
+      ].some((value) => value.trim() !== ''),
+    )
+
     drawText('Case Resolution Form Submission', { size: 18, weight: 'bold', spacing: 22 })
     drawText(`Generated on: ${new Date().toLocaleString()}`, { size: 10 })
     drawText(`Name: ${fullName}`)
@@ -896,16 +905,16 @@ function App() {
     drawText(`Department: ${report.department || '—'}`)
 
     y += 6
-    drawText(`Categories (${report.categories?.length ?? 0})`, {
+    drawText(`Categories (${filledCategories.length})`, {
       size: 14,
       weight: 'bold',
       spacing: 18,
     })
 
-    if (!report.categories?.length) {
-      drawText('No categories provided.')
+    if (!filledCategories.length) {
+      drawText('No filled categories provided.')
     } else {
-      report.categories.forEach((category, index) => {
+      filledCategories.forEach((category, index) => {
         drawText(`Top ${index + 1}: ${category.title || 'N/A'}`, {
           size: 12,
           weight: 'bold',
