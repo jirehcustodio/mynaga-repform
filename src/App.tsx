@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ListOrdered, Plus, Sparkles, Trash2, X } from 'lucide-react'
+import { jsPDF } from 'jspdf'
 import './App.css'
 import { caseCategories } from './data/categories'
 import { officeTopCategories } from './data/officeTopCategories'
@@ -187,14 +188,6 @@ const getSupabaseMissingMessage = () => {
 
   return `Supabase environment variables are missing: ${missing.join(', ')}`
 }
-
-const escapeHtml = (value: string) =>
-  value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
 
 function App() {
   const [view, setView] = useState<'form' | 'admin' | 'analytics'>('form')
@@ -862,63 +855,71 @@ function App() {
       .replaceAll(/[^a-z0-9]+/g, '-')
       .replaceAll(/(^-|-$)/g, '')
 
-    const categoryRows = (report.categories ?? [])
-      .map(
-        (category, index) => `
-          <section class="detail-card">
-            <h3>Top ${index + 1}: ${escapeHtml(category.title || 'N/A')}</h3>
-            <p><strong>Expected Processing Time:</strong> ${escapeHtml(category.committedDays || '—')} days</p>
-            <p><strong>Actual Time Taken:</strong> ${escapeHtml(category.actualDays || '—')} days</p>
-            <p><strong>Delay Cause:</strong> ${escapeHtml(category.reason || '—')}</p>
-            <p><strong>Support Requested from CMO:</strong> ${escapeHtml(category.cmoHelp || '—')}</p>
-          </section>
-        `,
-      )
-      .join('')
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 42
+    const maxTextWidth = pageWidth - margin * 2
+    let y = margin
 
-    const html = `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(fullName)} - Submission</title>
-    <style>
-      body { font-family: Arial, sans-serif; color: #111827; margin: 24px; line-height: 1.45; }
-      h1 { margin: 0 0 8px; font-size: 22px; }
-      h2 { margin: 20px 0 8px; font-size: 16px; }
-      h3 { margin: 0 0 8px; font-size: 14px; }
-      .meta { color: #4b5563; margin-bottom: 14px; font-size: 13px; }
-      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .cell { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; }
-      .label { text-transform: uppercase; letter-spacing: .04em; color: #6b7280; font-size: 11px; margin-bottom: 4px; }
-      .detail-card { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; margin-top: 10px; }
-      p { margin: 6px 0; }
-      @media print { body { margin: 0; } }
-    </style>
-  </head>
-  <body>
-    <h1>Case Resolution Form Submission</h1>
-    <div class="meta">Generated on ${new Date().toLocaleString()}</div>
-    <div class="grid">
-      <div class="cell"><div class="label">Name</div><div>${escapeHtml(fullName)}</div></div>
-      <div class="cell"><div class="label">Phone</div><div>${escapeHtml(report.phone || '—')}</div></div>
-      <div class="cell"><div class="label">Email Address</div><div>${escapeHtml(report.email || '—')}</div></div>
-      <div class="cell"><div class="label">Department</div><div>${escapeHtml(report.department || '—')}</div></div>
-    </div>
-    <h2>Categories (${report.categories?.length ?? 0})</h2>
-    ${categoryRows || '<p>No categories provided.</p>'}
-  </body>
-</html>`
+    const ensurePageSpace = (neededHeight: number) => {
+      if (y + neededHeight <= pageHeight - margin) {
+        return
+      }
 
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${safeName || 'submission'}-${report.id ?? 'report'}.html`
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
+      doc.addPage()
+      y = margin
+    }
+
+    const drawText = (
+      value: string,
+      options?: { size?: number; weight?: 'normal' | 'bold'; spacing?: number },
+    ) => {
+      const size = options?.size ?? 11
+      const spacing = options?.spacing ?? Math.max(14, size + 2)
+      const weight = options?.weight ?? 'normal'
+
+      doc.setFont('helvetica', weight)
+      doc.setFontSize(size)
+
+      const lines = doc.splitTextToSize(value, maxTextWidth)
+      ensurePageSpace(lines.length * spacing + 4)
+      doc.text(lines, margin, y)
+      y += lines.length * spacing + 4
+    }
+
+    drawText('Case Resolution Form Submission', { size: 18, weight: 'bold', spacing: 22 })
+    drawText(`Generated on: ${new Date().toLocaleString()}`, { size: 10 })
+    drawText(`Name: ${fullName}`)
+    drawText(`Phone: ${report.phone || '—'}`)
+    drawText(`Email Address: ${report.email || '—'}`)
+    drawText(`Department: ${report.department || '—'}`)
+
+    y += 6
+    drawText(`Categories (${report.categories?.length ?? 0})`, {
+      size: 14,
+      weight: 'bold',
+      spacing: 18,
+    })
+
+    if (!report.categories?.length) {
+      drawText('No categories provided.')
+    } else {
+      report.categories.forEach((category, index) => {
+        drawText(`Top ${index + 1}: ${category.title || 'N/A'}`, {
+          size: 12,
+          weight: 'bold',
+          spacing: 16,
+        })
+        drawText(`Expected Processing Time: ${category.committedDays || '—'} days`)
+        drawText(`Actual Time Taken: ${category.actualDays || '—'} days`)
+        drawText(`Delay Cause: ${category.reason || '—'}`)
+        drawText(`Support Requested from CMO: ${category.cmoHelp || '—'}`)
+        y += 6
+      })
+    }
+
+    doc.save(`${safeName || 'submission'}-${report.id ?? 'report'}.pdf`)
   }
 
   const openAdminView = () => {
@@ -1810,7 +1811,7 @@ function App() {
                         className="btn secondary"
                         onClick={() => handleDownloadSubmission(selectedReport)}
                       >
-                        Download
+                        Download PDF
                       </button>
                       <button className="btn" onClick={handlePrint}>
                         Print
