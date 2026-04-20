@@ -894,6 +894,18 @@ function App() {
     const clone = source.cloneNode(true) as HTMLDivElement
     clone.querySelectorAll('.no-print').forEach((node) => node.remove())
 
+    clone.querySelectorAll('.categories-table').forEach((table) => {
+      const tableElement = table as HTMLTableElement
+      tableElement.style.fontSize = '12px'
+      tableElement.style.lineHeight = '1.25'
+
+      tableElement.querySelectorAll('th').forEach((th) => {
+        const headerCell = th as HTMLTableCellElement
+        headerCell.style.fontSize = '11px'
+        headerCell.style.lineHeight = '1.15'
+      })
+    })
+
     clone.querySelectorAll('.categories-table tr').forEach((row) => {
       const tableRow = row as HTMLTableRowElement
       const expectedCell = tableRow.cells[2]
@@ -904,11 +916,11 @@ function App() {
           return
         }
 
-        cell.style.width = '88px'
-        cell.style.minWidth = '88px'
-        cell.style.maxWidth = '88px'
-        cell.style.paddingLeft = '6px'
-        cell.style.paddingRight = '6px'
+        cell.style.width = '74px'
+        cell.style.minWidth = '74px'
+        cell.style.maxWidth = '74px'
+        cell.style.paddingLeft = '3px'
+        cell.style.paddingRight = '3px'
         cell.style.textAlign = 'center'
         cell.style.whiteSpace = 'nowrap'
       })
