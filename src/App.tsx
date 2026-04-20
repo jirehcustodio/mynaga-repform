@@ -894,8 +894,31 @@ function App() {
     const clone = source.cloneNode(true) as HTMLDivElement
     clone.querySelectorAll('.no-print').forEach((node) => node.remove())
 
-    clone.style.width = `${source.getBoundingClientRect().width}px`
-    clone.style.maxWidth = '1000px'
+    clone.querySelectorAll('.categories-table tr').forEach((row) => {
+      const tableRow = row as HTMLTableRowElement
+      const expectedCell = tableRow.cells[2]
+      const actualCell = tableRow.cells[3]
+
+      ;[expectedCell, actualCell].forEach((cell) => {
+        if (!cell) {
+          return
+        }
+
+        cell.style.width = '88px'
+        cell.style.minWidth = '88px'
+        cell.style.maxWidth = '88px'
+        cell.style.paddingLeft = '6px'
+        cell.style.paddingRight = '6px'
+        cell.style.textAlign = 'center'
+        cell.style.whiteSpace = 'nowrap'
+      })
+    })
+
+    const sourceWidth = source.getBoundingClientRect().width
+    const exportWidth = Math.min(Math.max(sourceWidth, 760), 900)
+
+    clone.style.width = `${exportWidth}px`
+    clone.style.maxWidth = `${exportWidth}px`
     clone.style.position = 'fixed'
     clone.style.left = '-10000px'
     clone.style.top = '0'
