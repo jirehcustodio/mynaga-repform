@@ -919,29 +919,119 @@ function App() {
       const contentWidth = pageWidth - margin * 2
       const contentHeight = pageHeight - margin * 2
 
-      const imgData = canvas.toDataURL('image/png')
-      const imgWidth = contentWidth
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      const pageContentPx = Math.floor((contentHeight * canvas.width) / contentWidth)
+      const canvasContext = canvas.getContext('2d')
 
-      let remainingHeight = imgHeight
-      let offsetY = 0
+      const getInkScoreForRow = (row: number) => {
+        if (!canvasContext) {
+          return Number.MAX_SAFE_INTEGER
+        }
 
-      while (remainingHeight > 0) {
-        if (offsetY > 0) {
+        const rowData = canvasContext.getImageData(0, row, canvas.width, 1).data
+        let inkScore = 0
+
+        for (let x = 0; x < canvas.width; x += 8) {
+          const pixelIndex = x * 4
+          const alpha = rowData[pixelIndex + 3]
+
+          if (alpha < 10) {
+            continue
+          }
+
+          const red = rowData[pixelIndex]
+          const green = rowData[pixelIndex + 1]
+          const blue = rowData[pixelIndex + 2]
+
+          if (red < 245 || green < 245 || blue < 245) {
+            inkScore += 1
+          }
+        }
+
+        return inkScore
+      }
+
+      const findCleanBreakRow = (startY: number, idealEndY: number) => {
+        const searchFrom = Math.max(
+          startY + Math.floor(pageContentPx * 0.72),
+          idealEndY - 180,
+        )
+        const searchTo = Math.max(searchFrom + 1, idealEndY - 20)
+
+        let bestRow = idealEndY
+        let bestScore = Number.MAX_SAFE_INTEGER
+
+        for (let row = searchFrom; row <= searchTo; row += 2) {
+          const score = getInkScoreForRow(row)
+          const distancePenalty = Math.abs(idealEndY - row) * 0.02
+          const weightedScore = score + distancePenalty
+
+          if (weightedScore < bestScore) {
+            bestScore = weightedScore
+            bestRow = row
+          }
+        }
+
+        return Math.min(Math.max(bestRow, startY + 40), idealEndY)
+      }
+
+      let startY = 0
+      let pageIndex = 0
+
+      while (startY < canvas.height) {
+        const remainingPx = canvas.height - startY
+        let sliceHeightPx = Math.min(pageContentPx, remainingPx)
+
+        if (remainingPx > pageContentPx) {
+          const idealEndY = startY + pageContentPx
+          const cleanEndY = findCleanBreakRow(startY, idealEndY)
+          const adjustedHeight = cleanEndY - startY
+
+          if (adjustedHeight > 0) {
+            sliceHeightPx = adjustedHeight
+          }
+        }
+
+        const sliceCanvas = document.createElement('canvas')
+        sliceCanvas.width = canvas.width
+        sliceCanvas.height = sliceHeightPx
+        const sliceContext = sliceCanvas.getContext('2d')
+
+        if (!sliceContext) {
+          throw new Error('Unable to generate PDF slice canvas context.')
+        }
+
+        sliceContext.drawImage(
+          canvas,
+          0,
+          startY,
+          canvas.width,
+          sliceHeightPx,
+          0,
+          0,
+          canvas.width,
+          sliceHeightPx,
+        )
+
+        const sliceImageData = sliceCanvas.toDataURL('image/png')
+        const sliceHeightPt = (sliceHeightPx * contentWidth) / canvas.width
+
+        if (pageIndex > 0) {
           doc.addPage()
         }
 
         doc.addImage(
-          imgData,
+          sliceImageData,
           'PNG',
           margin,
-          margin - offsetY,
-          imgWidth,
-          imgHeight,
+          margin,
+          contentWidth,
+          sliceHeightPt,
+          undefined,
+          'FAST',
         )
 
-        remainingHeight -= contentHeight
-        offsetY += contentHeight
+        startY += sliceHeightPx
+        pageIndex += 1
       }
 
       doc.save(`${safeName || 'submission'}-${report.id ?? 'report'}.pdf`)

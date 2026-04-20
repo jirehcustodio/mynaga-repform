@@ -632,8 +632,10 @@ h4 {
   border: 1px solid var(--border);
   text-align: left;
   vertical-align: top;
-  padding: 10px 12px;
-  line-height: 1.35;
+  padding: 11px 13px;
+  line-height: 1.45;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .report-table thead th {
@@ -661,6 +663,14 @@ h4 {
 .categories-table td:first-child {
   width: 64px;
   text-align: center;
+  white-space: nowrap;
+}
+
+.categories-table th:nth-child(3),
+.categories-table th:nth-child(4),
+.categories-table td:nth-child(3),
+.categories-table td:nth-child(4) {
+  width: 120px;
   white-space: nowrap;
 }
 
@@ -1084,7 +1094,8 @@ h4 {
   .report-table th,
   .report-table td {
     border: 1px solid #111827;
-    padding: 6px 8px;
+    padding: 7px 9px;
+    line-height: 1.38;
   }
 
   .report-table thead th,
