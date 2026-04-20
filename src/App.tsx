@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ListOrdered, Plus, Sparkles, Trash2, X } from 'lucide-react'
+import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import './App.css'
 import { caseCategories } from './data/categories'
@@ -19,6 +20,34 @@ const DRAFT_STORAGE_KEY = 'mynaga_case_form_draft_v1'
 const COOKIE_CONSENT_KEY = 'mynaga_cookie_consent_v1'
 const ADMIN_USERS_TABLE = 'admin_users'
 
+const GENERIC_CATEGORY_PATTERNS = [
+  /^others?$/i,
+  /^other\b/i,
+  /^public safety concerns$/i,
+]
+
+const normalizeCategoryTitle = (title: string) => title.replace(/\s+/g, ' ').trim()
+
+const isGenericCategoryBucket = (title: string) =>
+  GENERIC_CATEGORY_PATTERNS.some((pattern) => pattern.test(title))
+
+const sanitizeCategoryTitles = (titles: string[]) => {
+  const seen = new Set<string>()
+
+  return titles
+    .map(normalizeCategoryTitle)
+    .filter((title) => title && !isGenericCategoryBucket(title))
+    .filter((title) => {
+      const key = title.toLowerCase()
+      if (seen.has(key)) {
+        return false
+      }
+
+      seen.add(key)
+      return true
+    })
+}
+
 const createCategoryEntries = (titles: string[]): CategoryEntry[] =>
   titles.map((title) => ({
     title,
@@ -32,9 +61,11 @@ const defaultCategoryTitles = [
   ...officeTopCategories.overall.categories.map((category) => category.name),
   ...caseCategories,
 ]
-  .filter((category) => category && category.toLowerCase() !== 'others')
-  .filter((category, index, arr) => arr.indexOf(category) === index)
-  .slice(0, 10)
+  .flatMap((category) => category)
+
+const cleanedDefaultCategoryTitles = sanitizeCategoryTitles(defaultCategoryTitles)
+
+const topDefaultCategoryTitles = cleanedDefaultCategoryTitles.slice(0, 10)
 
 const getTopCategoryTitlesForOffice = (office: string) => {
   const officeMatch = officeTopCategories.offices.find(
@@ -44,12 +75,9 @@ const getTopCategoryTitlesForOffice = (office: string) => {
   const officeTitles =
     officeMatch?.categories.map((category) => category.name) ?? []
 
-  const merged = [...officeTitles, ...defaultCategoryTitles]
+  const merged = [...officeTitles, ...topDefaultCategoryTitles]
 
-  return merged
-    .filter((category) => category && category.toLowerCase() !== 'others')
-    .filter((category, index, arr) => arr.indexOf(category) === index)
-    .slice(0, 10)
+  return sanitizeCategoryTitles(merged).slice(0, 10)
 }
 
 const getCustomCategoryTitles = () =>
@@ -63,7 +91,7 @@ const initialFormData = (): CaseReport => ({
   phone: '',
   email: '',
   department: '',
-  categories: createCategoryEntries(defaultCategoryTitles),
+  categories: createCategoryEntries(topDefaultCategoryTitles),
 })
 
 const formatFullName = (report: {
@@ -224,6 +252,7 @@ function App() {
   } | null>(null)
   const [adminAuthLoading, setAdminAuthLoading] = useState(false)
   const [adminAuthError, setAdminAuthError] = useState('')
+  const adminPrintAreaRef = useRef<HTMLDivElement | null>(null)
 
   const isSupabaseReady = isSupabaseConfigured
   const departmentValue = formData.department.trim()
@@ -848,87 +877,79 @@ function App() {
     window.print()
   }
 
-  const handleDownloadSubmission = (report: CaseReport) => {
+  const handleDownloadSubmission = async (report: CaseReport) => {
+    const source = adminPrintAreaRef.current
+
+    if (!source) {
+      setAdminError('Unable to export PDF preview right now. Please try again.')
+      return
+    }
+
     const fullName = formatFullName(report) || 'Unnamed Submission'
     const safeName = fullName
       .toLowerCase()
       .replaceAll(/[^a-z0-9]+/g, '-')
       .replaceAll(/(^-|-$)/g, '')
 
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' })
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
-    const margin = 42
-    const maxTextWidth = pageWidth - margin * 2
-    let y = margin
+    const clone = source.cloneNode(true) as HTMLDivElement
+    clone.querySelectorAll('.no-print').forEach((node) => node.remove())
 
-    const ensurePageSpace = (neededHeight: number) => {
-      if (y + neededHeight <= pageHeight - margin) {
-        return
+    clone.style.width = `${source.getBoundingClientRect().width}px`
+    clone.style.maxWidth = '1000px'
+    clone.style.position = 'fixed'
+    clone.style.left = '-10000px'
+    clone.style.top = '0'
+    clone.style.zIndex = '-1'
+    clone.style.opacity = '1'
+    clone.style.background = '#ffffff'
+
+    document.body.appendChild(clone)
+
+    try {
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+      })
+
+      const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' })
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      const margin = 20
+      const contentWidth = pageWidth - margin * 2
+      const contentHeight = pageHeight - margin * 2
+
+      const imgData = canvas.toDataURL('image/png')
+      const imgWidth = contentWidth
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      let remainingHeight = imgHeight
+      let offsetY = 0
+
+      while (remainingHeight > 0) {
+        if (offsetY > 0) {
+          doc.addPage()
+        }
+
+        doc.addImage(
+          imgData,
+          'PNG',
+          margin,
+          margin - offsetY,
+          imgWidth,
+          imgHeight,
+        )
+
+        remainingHeight -= contentHeight
+        offsetY += contentHeight
       }
 
-      doc.addPage()
-      y = margin
+      doc.save(`${safeName || 'submission'}-${report.id ?? 'report'}.pdf`)
+    } catch (error) {
+      setAdminError(getErrorMessage(error, 'Unable to generate PDF right now.'))
+    } finally {
+      clone.remove()
     }
-
-    const drawText = (
-      value: string,
-      options?: { size?: number; weight?: 'normal' | 'bold'; spacing?: number },
-    ) => {
-      const size = options?.size ?? 11
-      const spacing = options?.spacing ?? Math.max(14, size + 2)
-      const weight = options?.weight ?? 'normal'
-
-      doc.setFont('helvetica', weight)
-      doc.setFontSize(size)
-
-      const lines = doc.splitTextToSize(value, maxTextWidth)
-      ensurePageSpace(lines.length * spacing + 4)
-      doc.text(lines, margin, y)
-      y += lines.length * spacing + 4
-    }
-
-    const filledCategories = (report.categories ?? []).filter((category) =>
-      [
-        category.committedDays,
-        category.actualDays,
-        category.reason,
-        category.cmoHelp,
-      ].some((value) => value.trim() !== ''),
-    )
-
-    drawText('Case Resolution Form Submission', { size: 18, weight: 'bold', spacing: 22 })
-    drawText(`Generated on: ${new Date().toLocaleString()}`, { size: 10 })
-    drawText(`Name: ${fullName}`)
-    drawText(`Phone: ${report.phone || '—'}`)
-    drawText(`Email Address: ${report.email || '—'}`)
-    drawText(`Department: ${report.department || '—'}`)
-
-    y += 6
-    drawText(`Categories (${filledCategories.length})`, {
-      size: 14,
-      weight: 'bold',
-      spacing: 18,
-    })
-
-    if (!filledCategories.length) {
-      drawText('No filled categories provided.')
-    } else {
-      filledCategories.forEach((category, index) => {
-        drawText(`Top ${index + 1}: ${category.title || 'N/A'}`, {
-          size: 12,
-          weight: 'bold',
-          spacing: 16,
-        })
-        drawText(`Expected Processing Time: ${category.committedDays || '—'} days`)
-        drawText(`Actual Time Taken: ${category.actualDays || '—'} days`)
-        drawText(`Delay Cause: ${category.reason || '—'}`)
-        drawText(`Support Requested from CMO: ${category.cmoHelp || '—'}`)
-        y += 6
-      })
-    }
-
-    doc.save(`${safeName || 'submission'}-${report.id ?? 'report'}.pdf`)
   }
 
   const openAdminView = () => {
@@ -1582,51 +1603,55 @@ function App() {
                   </p>
                 </div>
               </div>
-              <div className="detail-grid">
-                <div>
-                  <p className="label">Name</p>
-                  <p>{formatFullName(submitSuccess)}</p>
-                </div>
-                <div>
-                  <p className="label">Phone</p>
-                  <p>{submitSuccess.phone}</p>
-                </div>
-                <div>
-                  <p className="label">Email Address</p>
-                  <p>{submitSuccess.email}</p>
-                </div>
-                <div>
-                  <p className="label">Department</p>
-                  <p>{submitSuccess.department}</p>
-                </div>
+              <div className="table-wrap">
+                <table className="report-table summary-table">
+                  <tbody>
+                    <tr>
+                      <th>Name</th>
+                      <td>{formatFullName(submitSuccess)}</td>
+                      <th>Phone</th>
+                      <td>{submitSuccess.phone || '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>Email Address</th>
+                      <td>{submitSuccess.email || '—'}</td>
+                      <th>Department</th>
+                      <td>{submitSuccess.department || '—'}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
               {submitSuccess.categories?.length > 0 && (
                 <div className="detail-categories">
                   <p className="helper print-category-count">
                     Total categories included: {submitSuccess.categories.length}
                   </p>
-                  {submitSuccess.categories.map((category, index) => (
-                    <div className="detail-card" key={`${category.title}-${index}`}>
-                      <h4>
-                        Top {index + 1}: {category.title}
-                      </h4>
-                      <p>
-                        <strong>Expected Processing Time:</strong>{' '}
-                        {category.committedDays || '—'} days
-                      </p>
-                      <p>
-                        <strong>Actual Time Taken:</strong>{' '}
-                        {category.actualDays || '—'} days
-                      </p>
-                      <p>
-                        <strong>Delay Cause:</strong> {category.reason || '—'}
-                      </p>
-                      <p>
-                        <strong>Support Requested from CMO:</strong>{' '}
-                        {category.cmoHelp || '—'}
-                      </p>
-                    </div>
-                  ))}
+                  <div className="table-wrap">
+                    <table className="report-table categories-table">
+                      <thead>
+                        <tr>
+                          <th>Top #</th>
+                          <th>Category</th>
+                          <th>Expected (Days)</th>
+                          <th>Actual (Days)</th>
+                          <th>Delay Cause</th>
+                          <th>Support Requested from CMO</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {submitSuccess.categories.map((category, index) => (
+                          <tr key={`${category.title}-${index}`}>
+                            <td>{index + 1}</td>
+                            <td>{category.title || '—'}</td>
+                            <td>{category.committedDays || '—'}</td>
+                            <td>{category.actualDays || '—'}</td>
+                            <td>{category.reason || '—'}</td>
+                            <td>{category.cmoHelp || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -1803,7 +1828,7 @@ function App() {
             </div>
             <div className="admin-detail">
               {selectedReport ? (
-                <div className="print-area">
+                <div className="print-area" ref={adminPrintAreaRef}>
                   <div className="detail-header">
                     <div>
                       <h3>Submission Details</h3>
@@ -1827,51 +1852,55 @@ function App() {
                       </button>
                     </div>
                   </div>
-                  <div className="detail-grid">
-                    <div>
-                      <p className="label">Name</p>
-                      <p>{formatFullName(selectedReport)}</p>
-                    </div>
-                    <div>
-                      <p className="label">Phone</p>
-                      <p>{selectedReport.phone}</p>
-                    </div>
-                    <div>
-                      <p className="label">Email Address</p>
-                      <p>{selectedReport.email}</p>
-                    </div>
-                    <div>
-                      <p className="label">Department</p>
-                      <p>{selectedReport.department}</p>
-                    </div>
+                  <div className="table-wrap">
+                    <table className="report-table summary-table">
+                      <tbody>
+                        <tr>
+                          <th>Name</th>
+                          <td>{formatFullName(selectedReport)}</td>
+                          <th>Phone</th>
+                          <td>{selectedReport.phone || '—'}</td>
+                        </tr>
+                        <tr>
+                          <th>Email Address</th>
+                          <td>{selectedReport.email || '—'}</td>
+                          <th>Department</th>
+                          <td>{selectedReport.department || '—'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                   {selectedReport.categories?.length > 0 && (
                     <div className="detail-categories">
                       <p className="helper print-category-count">
                         Total categories included: {selectedReport.categories.length}
                       </p>
-                      {selectedReport.categories.map((category, index) => (
-                        <div className="detail-card" key={`${category.title}-${index}`}>
-                          <h4>
-                            Top {index + 1}: {category.title}
-                          </h4>
-                          <p>
-                            <strong>Committed:</strong>{' '}
-                            {category.committedDays || '—'} days
-                          </p>
-                          <p>
-                            <strong>Actual:</strong>{' '}
-                            {category.actualDays || '—'} days
-                          </p>
-                          <p>
-                            <strong>Reason:</strong> {category.reason || '—'}
-                          </p>
-                          <p>
-                            <strong>How CMO can help:</strong>{' '}
-                            {category.cmoHelp || '—'}
-                          </p>
-                        </div>
-                      ))}
+                      <div className="table-wrap">
+                        <table className="report-table categories-table">
+                          <thead>
+                            <tr>
+                              <th>Top #</th>
+                              <th>Category</th>
+                              <th>Expected (Days)</th>
+                              <th>Actual (Days)</th>
+                              <th>Delay Cause</th>
+                              <th>Support Requested from CMO</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedReport.categories.map((category, index) => (
+                              <tr key={`${category.title}-${index}`}>
+                                <td>{index + 1}</td>
+                                <td>{category.title || '—'}</td>
+                                <td>{category.committedDays || '—'}</td>
+                                <td>{category.actualDays || '—'}</td>
+                                <td>{category.reason || '—'}</td>
+                                <td>{category.cmoHelp || '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1889,7 +1918,7 @@ function App() {
             <div>
               <h2>Office Analytics</h2>
               <p className="subtext">
-                Top categories per office ("Others" mapped to clusters).
+                Top specific categories per office based on spreadsheet reports.
               </p>
             </div>
             <span className="pill">

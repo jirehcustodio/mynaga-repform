@@ -611,6 +611,59 @@ h4 {
   margin-top: 12px;
 }
 
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  font-size: 14px;
+}
+
+.report-table th,
+.report-table td {
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 12px;
+  line-height: 1.35;
+}
+
+.report-table thead th {
+  background: #f5f7ff;
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.summary-table th {
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 700;
+  width: 18%;
+}
+
+.summary-table td {
+  width: 32%;
+}
+
+.categories-table tbody tr:nth-child(odd) {
+  background: #fcfdff;
+}
+
+.categories-table th:first-child,
+.categories-table td:first-child {
+  width: 64px;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .detail-grid > div {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -913,6 +966,15 @@ h4 {
   .cookie-banner .btn {
     width: 100%;
   }
+
+  .report-table {
+    font-size: 12.5px;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 8px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1005,6 +1067,37 @@ h4 {
     display: grid;
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+
+  .table-wrap {
+    overflow: visible;
+  }
+
+  .report-table {
+    border: 1px solid #111827;
+    border-radius: 0;
+    font-size: 10.5pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-table th,
+  .report-table td {
+    border: 1px solid #111827;
+    padding: 6px 8px;
+  }
+
+  .report-table thead th,
+  .summary-table th {
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .categories-table tr,
+  .summary-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .detail-grid {
