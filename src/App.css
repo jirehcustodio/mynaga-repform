@@ -670,8 +670,11 @@ h4 {
 .categories-table th:nth-child(4),
 .categories-table td:nth-child(3),
 .categories-table td:nth-child(4) {
-  width: 120px;
+  width: 92px;
   white-space: nowrap;
+  text-align: center;
+  padding-left: 7px;
+  padding-right: 7px;
 }
 
 .detail-grid > div {
@@ -1096,6 +1099,15 @@ h4 {
     border: 1px solid #111827;
     padding: 7px 9px;
     line-height: 1.38;
+  }
+
+  .categories-table th:nth-child(3),
+  .categories-table th:nth-child(4),
+  .categories-table td:nth-child(3),
+  .categories-table td:nth-child(4) {
+    width: 80px;
+    padding-left: 5px;
+    padding-right: 5px;
   }
 
   .report-table thead th,
