@@ -743,6 +743,11 @@ h4 {
   margin-top: 16px;
 }
 
+.analytics-print-area {
+  display: grid;
+  gap: 12px;
+}
+
 .analytics-card {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -1061,7 +1066,7 @@ h4 {
     margin-top: 0 !important;
   }
 
-  .card > :not(.response-print-area):not(.admin-grid) {
+  .card > :not(.response-print-area):not(.admin-grid):not(.analytics-print-area) {
     display: none !important;
   }
 
@@ -1071,6 +1076,26 @@ h4 {
 
   .admin-detail > :not(.print-area) {
     display: none !important;
+  }
+
+  .analytics-print-area {
+    display: block;
+  }
+
+  .analytics-grid {
+    gap: 10px;
+  }
+
+  .office-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .analytics-card,
+  .office-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-shadow: none;
   }
 
   .print-area {

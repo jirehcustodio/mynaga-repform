@@ -227,6 +227,7 @@ function App() {
   const [reports, setReports] = useState<CaseReport[]>([])
   const [loadingReports, setLoadingReports] = useState(false)
   const [adminError, setAdminError] = useState('')
+  const [analyticsError, setAnalyticsError] = useState('')
   const [selectedReport, setSelectedReport] = useState<CaseReport | null>(null)
   const [categoryMode, setCategoryMode] = useState<CategoryMode | null>(null)
   const [isCategoryModeModalOpen, setIsCategoryModeModalOpen] = useState(false)
@@ -253,6 +254,7 @@ function App() {
   const [adminAuthLoading, setAdminAuthLoading] = useState(false)
   const [adminAuthError, setAdminAuthError] = useState('')
   const adminPrintAreaRef = useRef<HTMLDivElement | null>(null)
+  const analyticsPrintAreaRef = useRef<HTMLDivElement | null>(null)
 
   const isSupabaseReady = isSupabaseConfigured
   const departmentValue = formData.department.trim()
@@ -271,6 +273,14 @@ function App() {
   const selectedOfficeTopCategories = useMemo(
     () => getTopCategoryTitlesForOffice(departmentValue),
     [departmentValue],
+  )
+
+  const officesSortedByCases = useMemo(
+    () =>
+      [...officeTopCategories.offices].sort(
+        (a, b) => b.totalReports - a.totalReports,
+      ),
+    [],
   )
 
   const stepLabels = useMemo(() => {
@@ -877,54 +887,15 @@ function App() {
     window.print()
   }
 
-  const handleDownloadSubmission = async (report: CaseReport) => {
-    const source = adminPrintAreaRef.current
-
-    if (!source) {
-      setAdminError('Unable to export PDF preview right now. Please try again.')
-      return
-    }
-
-    const fullName = formatFullName(report) || 'Unnamed Submission'
-    const safeName = fullName
-      .toLowerCase()
-      .replaceAll(/[^a-z0-9]+/g, '-')
-      .replaceAll(/(^-|-$)/g, '')
-
+  const exportElementToPdf = async (
+    source: HTMLDivElement,
+    filename: string,
+    prepareClone?: (clone: HTMLDivElement) => void,
+  ) => {
     const clone = source.cloneNode(true) as HTMLDivElement
     clone.querySelectorAll('.no-print').forEach((node) => node.remove())
 
-    clone.querySelectorAll('.categories-table').forEach((table) => {
-      const tableElement = table as HTMLTableElement
-      tableElement.style.fontSize = '12px'
-      tableElement.style.lineHeight = '1.25'
-
-      tableElement.querySelectorAll('th').forEach((th) => {
-        const headerCell = th as HTMLTableCellElement
-        headerCell.style.fontSize = '11px'
-        headerCell.style.lineHeight = '1.15'
-      })
-    })
-
-    clone.querySelectorAll('.categories-table tr').forEach((row) => {
-      const tableRow = row as HTMLTableRowElement
-      const expectedCell = tableRow.cells[2]
-      const actualCell = tableRow.cells[3]
-
-      ;[expectedCell, actualCell].forEach((cell) => {
-        if (!cell) {
-          return
-        }
-
-        cell.style.width = '74px'
-        cell.style.minWidth = '74px'
-        cell.style.maxWidth = '74px'
-        cell.style.paddingLeft = '3px'
-        cell.style.paddingRight = '3px'
-        cell.style.textAlign = 'center'
-        cell.style.whiteSpace = 'nowrap'
-      })
-    })
+    prepareClone?.(clone)
 
     const sourceWidth = source.getBoundingClientRect().width
     const exportWidth = Math.min(Math.max(sourceWidth, 760), 900)
@@ -1069,11 +1040,85 @@ function App() {
         pageIndex += 1
       }
 
-      doc.save(`${safeName || 'submission'}-${report.id ?? 'report'}.pdf`)
-    } catch (error) {
-      setAdminError(getErrorMessage(error, 'Unable to generate PDF right now.'))
+      doc.save(filename)
     } finally {
       clone.remove()
+    }
+  }
+
+  const handleDownloadSubmission = async (report: CaseReport) => {
+    const source = adminPrintAreaRef.current
+
+    if (!source) {
+      setAdminError('Unable to export PDF preview right now. Please try again.')
+      return
+    }
+
+    const fullName = formatFullName(report) || 'Unnamed Submission'
+    const safeName = fullName
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9]+/g, '-')
+      .replaceAll(/(^-|-$)/g, '')
+
+    try {
+      await exportElementToPdf(
+        source,
+        `${safeName || 'submission'}-${report.id ?? 'report'}.pdf`,
+        (clone) => {
+          clone.querySelectorAll('.categories-table').forEach((table) => {
+            const tableElement = table as HTMLTableElement
+            tableElement.style.fontSize = '12px'
+            tableElement.style.lineHeight = '1.25'
+
+            tableElement.querySelectorAll('th').forEach((th) => {
+              const headerCell = th as HTMLTableCellElement
+              headerCell.style.fontSize = '11px'
+              headerCell.style.lineHeight = '1.15'
+            })
+          })
+
+          clone.querySelectorAll('.categories-table tr').forEach((row) => {
+            const tableRow = row as HTMLTableRowElement
+            const expectedCell = tableRow.cells[2]
+            const actualCell = tableRow.cells[3]
+
+            ;[expectedCell, actualCell].forEach((cell) => {
+              if (!cell) {
+                return
+              }
+
+              cell.style.width = '74px'
+              cell.style.minWidth = '74px'
+              cell.style.maxWidth = '74px'
+              cell.style.paddingLeft = '3px'
+              cell.style.paddingRight = '3px'
+              cell.style.textAlign = 'center'
+              cell.style.whiteSpace = 'nowrap'
+            })
+          })
+        },
+      )
+    } catch (error) {
+      setAdminError(getErrorMessage(error, 'Unable to generate PDF right now.'))
+    }
+  }
+
+  const handleDownloadAnalytics = async () => {
+    const source = analyticsPrintAreaRef.current
+
+    if (!source) {
+      setAnalyticsError('Unable to export analytics PDF right now. Please try again.')
+      return
+    }
+
+    setAnalyticsError('')
+
+    try {
+      await exportElementToPdf(source, 'office-analytics-top-categories.pdf')
+    } catch (error) {
+      setAnalyticsError(
+        getErrorMessage(error, 'Unable to generate analytics PDF right now.'),
+      )
     }
   }
 
@@ -2039,52 +2084,67 @@ function App() {
 
       {view === 'analytics' && (
         <section className="card">
-          <div className="admin-header">
-            <div>
-              <h2>Office Analytics</h2>
-              <p className="subtext">
-                Top specific categories per office based on spreadsheet reports.
-              </p>
+          <div className="analytics-print-area" ref={analyticsPrintAreaRef}>
+            <div className="admin-header">
+              <div>
+                <h2>Office Analytics</h2>
+                <p className="subtext">
+                  Offices ordered by highest case volume, with top categories per office.
+                </p>
+              </div>
+              <div className="admin-header-actions">
+                <span className="pill">
+                  {officeTopCategories.overall.totalReports} total reports
+                </span>
+                <button
+                  className="btn secondary no-print"
+                  onClick={handleDownloadAnalytics}
+                >
+                  Download PDF
+                </button>
+                <button className="btn no-print" onClick={handlePrint}>
+                  Print
+                </button>
+              </div>
             </div>
-            <span className="pill">
-              {officeTopCategories.overall.totalReports} total reports
-            </span>
-          </div>
 
-          <div className="analytics-grid">
-            <div className="analytics-card">
-              <h3>Overall Top Categories</h3>
-              <ul>
-                {officeTopCategories.overall.categories.map((category) => (
-                  <li key={category.name}>
-                    <span>{category.name}</span>
-                    <strong>{category.count}</strong>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="analytics-card full">
-              <h3>Top Categories by Office</h3>
-              <div className="office-grid">
-                {officeTopCategories.offices.map((office) => (
-                  <div className="office-card" key={office.office}>
-                    <div className="office-header">
-                      <h4>{office.office}</h4>
-                      <span className="pill">{office.totalReports}</span>
+            <div className="analytics-grid">
+              <div className="analytics-card">
+                <h3>Overall Top Categories</h3>
+                <ul>
+                  {officeTopCategories.overall.categories.map((category) => (
+                    <li key={category.name}>
+                      <span>{category.name}</span>
+                      <strong>{category.count}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="analytics-card full">
+                <h3>Top Categories by Office (Most Cases First)</h3>
+                <div className="office-grid">
+                  {officesSortedByCases.map((office) => (
+                    <div className="office-card" key={office.office}>
+                      <div className="office-header">
+                        <h4>{office.office}</h4>
+                        <span className="pill">{office.totalReports}</span>
+                      </div>
+                      <ul>
+                        {office.categories.map((category) => (
+                          <li key={category.name}>
+                            <span>{category.name}</span>
+                            <strong>{category.count}</strong>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <ul>
-                      {office.categories.map((category) => (
-                        <li key={category.name}>
-                          <span>{category.name}</span>
-                          <strong>{category.count}</strong>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
+
+          {analyticsError && <p className="alert">{analyticsError}</p>}
         </section>
       )}
 
