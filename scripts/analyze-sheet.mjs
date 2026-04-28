@@ -30,6 +30,13 @@ const officeSet = new Set()
 let overallTotal = 0
 
 for (const record of records) {
+  const rawCategory = normalize(record.Category || '')
+  if (!rawCategory) {
+    continue
+  }
+
+  overallTotal += 1
+
   const officeRaw = normalize(record.Office || '')
   if (!officeRaw) continue
 
@@ -48,10 +55,7 @@ for (const record of records) {
     officeTotals.set(office, (officeTotals.get(office) ?? 0) + 1)
   })
 
-  overallTotal += 1
-
-  const rawCategory = normalize(record.Category || '')
-  if (!rawCategory || rawCategory.toLowerCase() === 'others') {
+  if (rawCategory.toLowerCase() === 'others') {
     continue
   }
 

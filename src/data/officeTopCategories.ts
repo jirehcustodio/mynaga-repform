@@ -1,6 +1,6 @@
 export const officeTopCategories = {
   "overall": {
-    "totalReports": 4972,
+    "totalReports": 5095,
     "categories": [
       {
         "name": "Streetlights for Repair",
