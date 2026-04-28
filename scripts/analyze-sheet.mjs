@@ -44,6 +44,12 @@ for (const record of records) {
 
   officeNames.forEach((office) => officeSet.add(office))
 
+  officeNames.forEach((office) => {
+    officeTotals.set(office, (officeTotals.get(office) ?? 0) + 1)
+  })
+
+  overallTotal += 1
+
   const rawCategory = normalize(record.Category || '')
   if (!rawCategory || rawCategory.toLowerCase() === 'others') {
     continue
@@ -58,7 +64,6 @@ for (const record of records) {
       (officeMap.get(normalizedCategory) ?? 0) + 1,
     )
     officeCounts.set(office, officeMap)
-    officeTotals.set(office, (officeTotals.get(office) ?? 0) + 1)
   })
 
   overallCounts.set(
@@ -66,7 +71,6 @@ for (const record of records) {
     (overallCounts.get(normalizedCategory) ?? 0) + 1,
   )
 
-  overallTotal += 1
 }
 
 const toSortedList = (map) =>

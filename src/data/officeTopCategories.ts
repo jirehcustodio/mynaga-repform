@@ -1,6 +1,6 @@
 export const officeTopCategories = {
   "overall": {
-    "totalReports": 3343,
+    "totalReports": 4767,
     "categories": [
       {
         "name": "Streetlights for Repair",
@@ -47,7 +47,7 @@ export const officeTopCategories = {
   "offices": [
     {
       "office": "BCS",
-      "totalReports": 3,
+      "totalReports": 13,
       "categories": [
         {
           "name": "Tricycle - Arrogant Behavior / Excessive Fare / Refusal",
@@ -61,7 +61,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CASURECO",
-      "totalReports": 216,
+      "totalReports": 521,
       "categories": [
         {
           "name": "Streetlights for Repair",
@@ -107,7 +107,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CDRRMO",
-      "totalReports": 2,
+      "totalReports": 13,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -117,7 +117,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CENRO",
-      "totalReports": 293,
+      "totalReports": 383,
       "categories": [
         {
           "name": "Overgrown Trees and Plants",
@@ -163,7 +163,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CEO",
-      "totalReports": 615,
+      "totalReports": 821,
       "categories": [
         {
           "name": "Drainage Declogging",
@@ -209,7 +209,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CHO",
-      "totalReports": 9,
+      "totalReports": 31,
       "categories": [
         {
           "name": "Fly Problem from Piggery & Poultry",
@@ -243,7 +243,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CMO",
-      "totalReports": 184,
+      "totalReports": 331,
       "categories": [
         {
           "name": "Paskuhan Gift Packs",
@@ -289,7 +289,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CPDO",
-      "totalReports": 1,
+      "totalReports": 5,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -299,7 +299,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CPRFMO",
-      "totalReports": 6,
+      "totalReports": 17,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -325,7 +325,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CSWD",
-      "totalReports": 11,
+      "totalReports": 45,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -347,7 +347,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CTO",
-      "totalReports": 6,
+      "totalReports": 32,
       "categories": [
         {
           "name": "Disruptive Noisy Activities",
@@ -365,7 +365,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CVO",
-      "totalReports": 103,
+      "totalReports": 134,
       "categories": [
         {
           "name": "Stray animals",
@@ -411,7 +411,7 @@ export const officeTopCategories = {
     },
     {
       "office": "DPWH",
-      "totalReports": 11,
+      "totalReports": 18,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -445,7 +445,7 @@ export const officeTopCategories = {
     },
     {
       "office": "GSO",
-      "totalReports": 583,
+      "totalReports": 610,
       "categories": [
         {
           "name": "Streetlights for Repair",
@@ -491,7 +491,7 @@ export const officeTopCategories = {
     },
     {
       "office": "HSDO",
-      "totalReports": 1,
+      "totalReports": 9,
       "categories": [
         {
           "name": "Obstructed Sidewalks",
@@ -501,7 +501,7 @@ export const officeTopCategories = {
     },
     {
       "office": "LBO",
-      "totalReports": 71,
+      "totalReports": 74,
       "categories": [
         {
           "name": "Illegal Parking",
@@ -547,7 +547,7 @@ export const officeTopCategories = {
     },
     {
       "office": "MEPO",
-      "totalReports": 13,
+      "totalReports": 24,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -573,7 +573,7 @@ export const officeTopCategories = {
     },
     {
       "office": "MNWD",
-      "totalReports": 28,
+      "totalReports": 173,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -615,7 +615,7 @@ export const officeTopCategories = {
     },
     {
       "office": "NCGH",
-      "totalReports": 1,
+      "totalReports": 31,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -625,7 +625,7 @@ export const officeTopCategories = {
     },
     {
       "office": "NCUTMC",
-      "totalReports": 22,
+      "totalReports": 23,
       "categories": [
         {
           "name": "Jeepney Concerns",
@@ -701,7 +701,7 @@ export const officeTopCategories = {
     },
     {
       "office": "PNP",
-      "totalReports": 2,
+      "totalReports": 4,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -711,7 +711,7 @@ export const officeTopCategories = {
     },
     {
       "office": "PSO",
-      "totalReports": 781,
+      "totalReports": 1041,
       "categories": [
         {
           "name": "Illegal Parking",
@@ -767,7 +767,7 @@ export const officeTopCategories = {
     },
     {
       "office": "REJECTED",
-      "totalReports": 24,
+      "totalReports": 33,
       "categories": [
         {
           "name": "Uncollected Garbage",
@@ -823,7 +823,7 @@ export const officeTopCategories = {
     },
     {
       "office": "SP",
-      "totalReports": 5,
+      "totalReports": 17,
       "categories": [
         {
           "name": "Public Transport",
@@ -851,7 +851,7 @@ export const officeTopCategories = {
     },
     {
       "office": "SWMO",
-      "totalReports": 436,
+      "totalReports": 492,
       "categories": [
         {
           "name": "Uncollected Garbage",
@@ -897,7 +897,7 @@ export const officeTopCategories = {
     },
     {
       "office": "TELCO",
-      "totalReports": 1,
+      "totalReports": 3,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
