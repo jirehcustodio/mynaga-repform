@@ -283,6 +283,16 @@ function App() {
     [],
   )
 
+  const topOfficesByCases = useMemo(
+    () => officesSortedByCases.slice(0, 5),
+    [officesSortedByCases],
+  )
+
+  const topCategoriesOverall = useMemo(
+    () => officeTopCategories.overall.categories.slice(0, 5),
+    [],
+  )
+
   const stepLabels = useMemo(() => {
     if (isCustomMode) {
       return hasSecondDetailsPage
@@ -2109,6 +2119,28 @@ function App() {
             </div>
 
             <div className="analytics-grid">
+              <div className="analytics-card">
+                <h3>Top 5 Offices + Total Reports (Per Office)</h3>
+                <ul>
+                  {topOfficesByCases.map((office) => (
+                    <li key={office.office}>
+                      <span>{office.office}</span>
+                      <strong>{office.totalReports}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="analytics-card">
+                <h3>Top 5 Categories + Total Reports (Per Category)</h3>
+                <ul>
+                  {topCategoriesOverall.map((category) => (
+                    <li key={category.name}>
+                      <span>{category.name}</span>
+                      <strong>{category.count}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <div className="analytics-card">
                 <h3>Overall Top Categories</h3>
                 <ul>
