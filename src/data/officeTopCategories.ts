@@ -1,46 +1,46 @@
 export const officeTopCategories = {
   "overall": {
-    "totalReports": 5095,
+    "totalReports": 5228,
     "categories": [
       {
         "name": "Streetlights for Repair",
-        "count": 424
+        "count": 443
       },
       {
         "name": "Uncollected Garbage",
-        "count": 399
+        "count": 426
       },
       {
         "name": "Other Public Safety Concerns",
-        "count": 368
+        "count": 371
       },
       {
         "name": "Illegal Parking",
-        "count": 230
+        "count": 246
       },
       {
         "name": "Drainage Declogging",
-        "count": 229
-      },
-      {
-        "name": "Obstructed Sidewalks",
-        "count": 177
+        "count": 236
       },
       {
         "name": "Public Safety Concerns",
-        "count": 163
+        "count": 194
+      },
+      {
+        "name": "Obstructed Sidewalks",
+        "count": 179
+      },
+      {
+        "name": "Paskuhan Gift Packs",
+        "count": 140
       },
       {
         "name": "Damaged pavement or potholes",
         "count": 111
       },
       {
-        "name": "Paskuhan Gift Packs",
-        "count": 100
-      },
-      {
-        "name": "Hauling of Cut Tree or Trimmings",
-        "count": 96
+        "name": "Dangling wires",
+        "count": 99
       }
     ]
   },
@@ -73,11 +73,11 @@ export const officeTopCategories = {
     },
     {
       "office": "CASURECO",
-      "totalReports": 528,
+      "totalReports": 539,
       "categories": [
         {
           "name": "Streetlights for Repair",
-          "count": 75
+          "count": 78
         },
         {
           "name": "Other Public Safety Concerns",
@@ -85,7 +85,7 @@ export const officeTopCategories = {
         },
         {
           "name": "Dangling wires",
-          "count": 39
+          "count": 40
         },
         {
           "name": "Dangling Wires",
@@ -96,12 +96,12 @@ export const officeTopCategories = {
           "count": 17
         },
         {
-          "name": "Hauling of Cut Tree or Trimmings",
-          "count": 7
+          "name": "Public Safety Concerns",
+          "count": 8
         },
         {
-          "name": "Public Safety Concerns",
-          "count": 6
+          "name": "Hauling of Cut Tree or Trimmings",
+          "count": 7
         },
         {
           "name": "Broken Street Lights",
@@ -118,6 +118,16 @@ export const officeTopCategories = {
       ]
     },
     {
+      "office": "CCRO",
+      "totalReports": 1,
+      "categories": [
+        {
+          "name": "Public Safety Concerns",
+          "count": 1
+        }
+      ]
+    },
+    {
       "office": "CDRRMO",
       "totalReports": 13,
       "categories": [
@@ -129,23 +139,23 @@ export const officeTopCategories = {
     },
     {
       "office": "CENRO",
-      "totalReports": 403,
+      "totalReports": 418,
       "categories": [
         {
           "name": "Overgrown Trees and Plants",
-          "count": 63
+          "count": 66
+        },
+        {
+          "name": "Open Burning of Waste",
+          "count": 51
         },
         {
           "name": "Hauling of Cut Tree or Trimmings",
           "count": 49
         },
         {
-          "name": "Open Burning of Waste",
-          "count": 49
-        },
-        {
           "name": "Disruptive Noisy Activities",
-          "count": 30
+          "count": 35
         },
         {
           "name": "Other Public Safety Concerns",
@@ -153,18 +163,18 @@ export const officeTopCategories = {
         },
         {
           "name": "Water Polluting Activities",
-          "count": 13
+          "count": 14
         },
         {
           "name": "Clogged Natural Waterways",
           "count": 10
         },
         {
-          "name": "Uncollected Garbage",
-          "count": 9
+          "name": "Public Safety Concerns",
+          "count": 10
         },
         {
-          "name": "Public Safety Concerns",
+          "name": "Uncollected Garbage",
           "count": 9
         },
         {
@@ -175,11 +185,11 @@ export const officeTopCategories = {
     },
     {
       "office": "CEO",
-      "totalReports": 864,
+      "totalReports": 889,
       "categories": [
         {
           "name": "Drainage Declogging",
-          "count": 218
+          "count": 224
         },
         {
           "name": "Damaged pavement or potholes",
@@ -191,7 +201,7 @@ export const officeTopCategories = {
         },
         {
           "name": "Dangling wires",
-          "count": 41
+          "count": 42
         },
         {
           "name": "Damage or Open Drainage",
@@ -199,7 +209,7 @@ export const officeTopCategories = {
         },
         {
           "name": "Clogged Natural Waterways",
-          "count": 37
+          "count": 39
         },
         {
           "name": "Damaged or Open Drainage",
@@ -207,7 +217,7 @@ export const officeTopCategories = {
         },
         {
           "name": "Public Safety Concerns",
-          "count": 26
+          "count": 29
         },
         {
           "name": "Damaged/Obstructed Sidewalks",
@@ -221,7 +231,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CHO",
-      "totalReports": 31,
+      "totalReports": 32,
       "categories": [
         {
           "name": "Fly Problem from Piggery & Poultry",
@@ -246,16 +256,20 @@ export const officeTopCategories = {
         {
           "name": "Odor from Agriculture & Industry",
           "count": 1
+        },
+        {
+          "name": "City Health Office Concerns",
+          "count": 1
         }
       ]
     },
     {
       "office": "CMO",
-      "totalReports": 331,
+      "totalReports": 379,
       "categories": [
         {
           "name": "Paskuhan Gift Packs",
-          "count": 100
+          "count": 140
         },
         {
           "name": "Other Public Safety Concerns",
@@ -263,10 +277,14 @@ export const officeTopCategories = {
         },
         {
           "name": "Uncollected Garbage",
-          "count": 6
+          "count": 7
         },
         {
           "name": "Hauling of Cut Tree or Trimmings",
+          "count": 6
+        },
+        {
+          "name": "Public Safety Concerns",
           "count": 6
         },
         {
@@ -278,15 +296,11 @@ export const officeTopCategories = {
           "count": 5
         },
         {
-          "name": "Public Safety Concerns",
+          "name": "Obstructed Sidewalks",
           "count": 4
         },
         {
           "name": "Damaged/Obstructed Sidewalks",
-          "count": 3
-        },
-        {
-          "name": "Obstructed Sidewalks",
           "count": 3
         },
         {
@@ -333,11 +347,11 @@ export const officeTopCategories = {
     },
     {
       "office": "CSWD",
-      "totalReports": 49,
+      "totalReports": 51,
       "categories": [
         {
           "name": "Public Safety Concerns",
-          "count": 7
+          "count": 10
         },
         {
           "name": "Other Public Safety Concerns",
@@ -355,14 +369,14 @@ export const officeTopCategories = {
     },
     {
       "office": "CTO",
-      "totalReports": 35,
+      "totalReports": 38,
       "categories": [
         {
-          "name": "BOSS 2026",
-          "count": 3
+          "name": "Public Safety Concerns",
+          "count": 5
         },
         {
-          "name": "Public Safety Concerns",
+          "name": "BOSS 2026",
           "count": 3
         },
         {
@@ -373,7 +387,7 @@ export const officeTopCategories = {
     },
     {
       "office": "CVO",
-      "totalReports": 139,
+      "totalReports": 144,
       "categories": [
         {
           "name": "Stray animals",
@@ -389,10 +403,18 @@ export const officeTopCategories = {
         },
         {
           "name": "Public Safety Concerns",
-          "count": 3
+          "count": 4
         },
         {
           "name": "Road kill",
+          "count": 2
+        },
+        {
+          "name": "Animal Cruelty",
+          "count": 2
+        },
+        {
+          "name": "Stray Animals",
           "count": 2
         },
         {
@@ -406,20 +428,12 @@ export const officeTopCategories = {
         {
           "name": "Disruptive Noisy Activities",
           "count": 1
-        },
-        {
-          "name": "Streetlights for Repair",
-          "count": 1
-        },
-        {
-          "name": "Sale of spoiled raw meat",
-          "count": 1
         }
       ]
     },
     {
       "office": "DPWH",
-      "totalReports": 18,
+      "totalReports": 19,
       "categories": [
         {
           "name": "Other Public Safety Concerns",
@@ -448,6 +462,10 @@ export const officeTopCategories = {
         {
           "name": "Obstructed Sidewalks",
           "count": 1
+        },
+        {
+          "name": "Public Safety Concerns",
+          "count": 1
         }
       ]
     },
@@ -463,11 +481,11 @@ export const officeTopCategories = {
     },
     {
       "office": "GSO",
-      "totalReports": 635,
+      "totalReports": 652,
       "categories": [
         {
           "name": "Streetlights for Repair",
-          "count": 321
+          "count": 336
         },
         {
           "name": "Dark Street",
@@ -475,7 +493,7 @@ export const officeTopCategories = {
         },
         {
           "name": "New Streetlights Installation",
-          "count": 72
+          "count": 73
         },
         {
           "name": "Broken Street Lights",
@@ -491,7 +509,7 @@ export const officeTopCategories = {
         },
         {
           "name": "Dangling wires",
-          "count": 11
+          "count": 12
         },
         {
           "name": "Damaged pavement or potholes",
@@ -519,15 +537,15 @@ export const officeTopCategories = {
     },
     {
       "office": "LBO",
-      "totalReports": 89,
+      "totalReports": 92,
       "categories": [
+        {
+          "name": "Public Safety Concerns",
+          "count": 22
+        },
         {
           "name": "Illegal Parking",
           "count": 21
-        },
-        {
-          "name": "Public Safety Concerns",
-          "count": 20
         },
         {
           "name": "Obstructed Sidewalks",
@@ -591,11 +609,11 @@ export const officeTopCategories = {
     },
     {
       "office": "MNWD",
-      "totalReports": 181,
+      "totalReports": 189,
       "categories": [
         {
           "name": "Public Safety Concerns",
-          "count": 9
+          "count": 10
         },
         {
           "name": "Clogged Natural Waterways",
@@ -608,6 +626,10 @@ export const officeTopCategories = {
         {
           "name": "Damaged pavement or potholes",
           "count": 6
+        },
+        {
+          "name": "Water Polluting Activities",
+          "count": 3
         },
         {
           "name": "Damaged or Obstructed Sidewalks",
@@ -628,20 +650,16 @@ export const officeTopCategories = {
         {
           "name": "Odor from Agriculture & Industry",
           "count": 1
-        },
-        {
-          "name": "Streetlights for Repair",
-          "count": 1
         }
       ]
     },
     {
       "office": "NCGH",
-      "totalReports": 36,
+      "totalReports": 43,
       "categories": [
         {
           "name": "Naga City General Hospital Concerns",
-          "count": 4
+          "count": 11
         },
         {
           "name": "Other Public Safety Concerns",
@@ -655,7 +673,7 @@ export const officeTopCategories = {
     },
     {
       "office": "NCUTMC",
-      "totalReports": 29,
+      "totalReports": 32,
       "categories": [
         {
           "name": "Jeepney Concerns",
@@ -670,23 +688,23 @@ export const officeTopCategories = {
           "count": 5
         },
         {
+          "name": "Jeep - Overloading",
+          "count": 3
+        },
+        {
           "name": "Tricycle - Arrogant Behavior / Excessive Fare / Refusal",
           "count": 3
+        },
+        {
+          "name": "Public Transport",
+          "count": 2
         },
         {
           "name": "Jeep -  Arrogant Behavior / Excessive Fare / Refusal",
           "count": 2
         },
         {
-          "name": "Public Transport",
-          "count": 1
-        },
-        {
           "name": "Tricycle Concerns",
-          "count": 1
-        },
-        {
-          "name": "Jeep - Overloading",
           "count": 1
         },
         {
@@ -734,6 +752,16 @@ export const officeTopCategories = {
       ]
     },
     {
+      "office": "PDAO",
+      "totalReports": 1,
+      "categories": [
+        {
+          "name": "Public Safety Concerns",
+          "count": 1
+        }
+      ]
+    },
+    {
       "office": "PNP",
       "totalReports": 4,
       "categories": [
@@ -755,15 +783,15 @@ export const officeTopCategories = {
     },
     {
       "office": "PSO",
-      "totalReports": 1073,
+      "totalReports": 1108,
       "categories": [
         {
           "name": "Illegal Parking",
-          "count": 205
+          "count": 221
         },
         {
           "name": "Other Public Safety Concerns",
-          "count": 168
+          "count": 171
         },
         {
           "name": "Obstructed Sidewalks",
@@ -775,7 +803,7 @@ export const officeTopCategories = {
         },
         {
           "name": "Public Safety Concerns",
-          "count": 52
+          "count": 60
         },
         {
           "name": "Public Transport",
@@ -794,54 +822,54 @@ export const officeTopCategories = {
           "count": 22
         },
         {
-          "name": "Disruptive Noisy Activities",
-          "count": 12
+          "name": "Tricycle - Arrogant Behavior / Excessive Fare / Refusal",
+          "count": 13
         }
       ]
     },
     {
       "office": "REJECTED",
-      "totalReports": 37,
+      "totalReports": 68,
       "categories": [
         {
           "name": "Uncollected Garbage",
-          "count": 5
+          "count": 9
         },
         {
           "name": "Obstructed Sidewalks",
-          "count": 5
+          "count": 6
+        },
+        {
+          "name": "Clogged Natural Waterways",
+          "count": 3
+        },
+        {
+          "name": "Streetlights for Repair",
+          "count": 3
+        },
+        {
+          "name": "Broken Street Lights",
+          "count": 2
         },
         {
           "name": "Drainage Declogging",
           "count": 2
         },
         {
-          "name": "Streetlights for Repair",
-          "count": 2
-        },
-        {
-          "name": "Disruptive Noisy Activities",
-          "count": 2
-        },
-        {
-          "name": "Clogged Natural Waterways",
-          "count": 2
-        },
-        {
           "name": "Overgrown Trees and Plants",
-          "count": 1
+          "count": 2
         },
         {
           "name": "Posters for Removal",
-          "count": 1
+          "count": 2
         },
         {
           "name": "Animal cruelty",
-          "count": 1
+          "count": 2
         },
         {
-          "name": "Other Public Safety Concerns",
-          "count": 1
+          "name": "Jeepney Concerns",
+          "count": 2
         }
       ]
     },
@@ -857,11 +885,11 @@ export const officeTopCategories = {
     },
     {
       "office": "SP",
-      "totalReports": 15,
+      "totalReports": 13,
       "categories": [
         {
           "name": "Public Transport",
-          "count": 2
+          "count": 1
         },
         {
           "name": "Tricycle Concerns",
@@ -885,11 +913,11 @@ export const officeTopCategories = {
     },
     {
       "office": "SWMO",
-      "totalReports": 516,
+      "totalReports": 540,
       "categories": [
         {
           "name": "Uncollected Garbage",
-          "count": 367
+          "count": 389
         },
         {
           "name": "Hauling of Cut Tree or Trimmings",
@@ -901,7 +929,7 @@ export const officeTopCategories = {
         },
         {
           "name": "Public Safety Concerns",
-          "count": 8
+          "count": 9
         },
         {
           "name": "Damaged or Open Drainage",
@@ -940,6 +968,16 @@ export const officeTopCategories = {
       ]
     },
     {
+      "office": "VMO",
+      "totalReports": 1,
+      "categories": [
+        {
+          "name": "Public Safety Concerns",
+          "count": 1
+        }
+      ]
+    },
+    {
       "office": "WSD",
       "totalReports": 1,
       "categories": [
@@ -956,6 +994,7 @@ export const officeTopCategories = {
     "BMC",
     "BSP",
     "CASURECO",
+    "CCRO",
     "CDRRMO",
     "CENRO",
     "CEO",
@@ -987,6 +1026,7 @@ export const officeTopCategories = {
     "OBEN Case",
     "OUTSIDE OF NAGA",
     "PAG-IBIG",
+    "PDAO",
     "PhilHealth",
     "PNP",
     "POSTAL",
@@ -1003,6 +1043,7 @@ export const officeTopCategories = {
     "SSS",
     "SWMO",
     "TELCO",
+    "VMO",
     "WSD"
   ]
 } as const
